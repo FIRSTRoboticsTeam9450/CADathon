@@ -11,9 +11,9 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
+import frc.robot.Constants.RobotConstants.IntakeConstants;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -31,9 +31,8 @@ public class IntakeSubsystem extends SubsystemBase {
     NOT_RUNNING
   }
 
-  TalonFX intakeMotor = new TalonFX(0, "CantDrive");
-  TalonFX intakePivot = new TalonFX(0, "CantDrive");
-
+  TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   PIDController PID = new PIDController(5, 0, 0);
 
   double velocity = 2;
@@ -64,14 +63,14 @@ public class IntakeSubsystem extends SubsystemBase {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    intakeMotor.getConfigurator().apply(config);
+    motorIntake.getConfigurator().apply(config);
   }
   
   public void configIntakePivot() {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    intakePivot.getConfigurator().apply(config);
+    motorPivot.getConfigurator().apply(config);
   }
   
   @Override
@@ -108,7 +107,7 @@ public class IntakeSubsystem extends SubsystemBase {
   /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
-    intakeMotor.setVoltage(voltage);
+    motorIntake.setVoltage(voltage);
   }
 
   public void setSetpoint(double setpoint) {

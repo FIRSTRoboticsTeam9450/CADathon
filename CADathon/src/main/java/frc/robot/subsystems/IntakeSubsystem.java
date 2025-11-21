@@ -56,7 +56,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
     configIntakeMotor();
     configIntakePivot();
-    intakePivot.setVoltage(-1);
+    motorPivot.setVoltage(-1);
   }
   
   public void configIntakeMotor() {
@@ -96,9 +96,9 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean isEncoderReset() {
-    if(intakePivot.getVelocity().getValueAsDouble() < .1) {
-      intakePivot.setPosition(0);
-      intakePivot.setVoltage(0);
+    if(motorPivot.getVelocity().getValueAsDouble() < .1) {
+      motorPivot.setPosition(0);
+      motorPivot.setVoltage(0);
       return true;
     }
     return false;

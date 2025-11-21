@@ -29,6 +29,7 @@ public class CoordinationSubsystem extends SubsystemBase{
 
         if (hasStateChanged) {
             applyState();
+            hasStateChanged = false;
         }
 
     }

@@ -4,64 +4,53 @@
 
 package frc.robot.subsystems;
 
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
+import frc.robot.Constants.RobotConstants.ShooterConstants;
 
 public class ShooterSubsystem extends SubsystemBase {
 
-  TalonFX intakeMotor = new TalonFX(0, "CantDrive");
-  TalonFX intakePivot = new TalonFX(0, "CantDrive");
-  
-  PIDController PID = new PIDController(5, 0, 0);
+  private static ShooterSubsystem INSTANCE;
 
-  /** Creates a new ExampleSubsystem. */
+  private TalonFX motorWheelFront = new TalonFX(ShooterConstants.FRONT_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorAngle = new TalonFX(ShooterConstants.ANGLE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+
   public ShooterSubsystem() {
-    configIntakeMotor();
-    configIntakePivot();
-  }
-  
-  public void configIntakeMotor() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    intakeMotor.getConfigurator().apply(config);
-  }
-  
-  public void configIntakePivot() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    intakePivot.getConfigurator().apply(config);
-  }
-  
-  @Override
-  public void periodic() {
-    
-    // This method will be called once per scheduler run
+
+    configureShooterMotors();
+    configureAngleMotor();
+
   }
 
-  public void setIntakeVoltage(double voltage) {
-    intakeMotor.setVoltage(voltage);
+  private void configureShooterMotors() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    motorWheelFront.getConfigurator().apply(motorConfig);
+    motorWheelBack.getConfigurator().apply(motorConfig);
   }
 
-  public void setSetpoint(double setpoint) {
-    PID.setSetpoint(setpoint);
+  private void configureAngleMotor() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    motorAngle.getConfigurator().apply(motorConfig);
   }
 
-  public void intakeUp() {
-    setSetpoint(0);
-    setIntakeVoltage(0);
-  }
 
-  public void intakeDown() {
-    setSetpoint(1);
-    setIntakeVoltage(1);
-  }
+  public static ShooterSubsystem getInsatnce() {
+    if (INSTANCE == null) {
+      INSTANCE = new ShooterSubsystem();
+    }
+    return INSTANCE;
+  } 
+
 }

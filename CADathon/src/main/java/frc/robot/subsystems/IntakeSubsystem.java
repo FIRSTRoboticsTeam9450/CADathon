@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -16,14 +17,47 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IntakeSubsystem extends SubsystemBase {
 
+  private static IntakeSubsystem INSTANCE;
+
+  public enum intakePos {
+    SPEECH_BUBBLES_INTAKE,
+    STORY_BOARDS_INTAKE,
+    STORE
+  }
+
+  public enum intakeState {
+    INTAKING,
+    OUTTAKING,
+    NOT_RUNNING
+  }
+
   TalonFX intakeMotor = new TalonFX(0, "CantDrive");
   TalonFX intakePivot = new TalonFX(0, "CantDrive");
+
   PIDController PID = new PIDController(5, 0, 0);
 
-  /** Creates a new ExampleSubsystem. */
+  double velocity = 2;
+  double acceleration = 100;
+  double jerk = 1000;
+  double currentLimit = 130; // 100 is the max stator current pull
+  double kS = 0.6; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
+  double kV = 0.26; // A velocity target of 1 rps results in 0.12 V output .12
+  double kA = 0.017; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
+  double kP = 3; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
+  double kI = 0; // no output for integrated error 0
+  double kD = 0.12; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
+  double kG = 0.45;
+  DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
+
+  intakePos currentPos = intakePos.STORE;
+
+  boolean resetDone = false;
+  
+  
   public IntakeSubsystem() {
     configIntakeMotor();
     configIntakePivot();
+    intakePivot.setVoltage(-1);
   }
   
   public void configIntakeMotor() {
@@ -42,9 +76,36 @@ public class IntakeSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
+
+
+    // Zero encoder
+    if(!resetDone) {
+      resetDone = isEncoderReset();
+    }
     
-    // This method will be called once per scheduler run
   }
+
+  public void goToPos(intakePos targetPos, intakeState state) {
+    if(currentPos == intakePos.STORE) {
+      setSetpoint(getPosition(targetPos));
+      setIntakeVoltage(getIntakeVoltage(state));
+    }
+    else {
+      setSetpoint(getPosition(intakePos.STORE));
+    }
+    
+  }
+
+  public boolean isEncoderReset() {
+    if(intakePivot.getVelocity().getValueAsDouble() < .1) {
+      intakePivot.setPosition(0);
+      intakePivot.setVoltage(0);
+      return true;
+    }
+    return false;
+  }
+
+  /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
     intakeMotor.setVoltage(voltage);
@@ -53,14 +114,40 @@ public class IntakeSubsystem extends SubsystemBase {
   public void setSetpoint(double setpoint) {
     PID.setSetpoint(setpoint);
   }
+  
+  /*** ____________________________________ GETTERS ____________________________________ ***/
 
-  public void intakeUp() {
-    setSetpoint(0);
-    setIntakeVoltage(0);
+  public double getPosition(intakePos pos) {
+    switch (pos) {
+      case STORE:
+        return 0;
+      case SPEECH_BUBBLES_INTAKE:
+        return 0;
+      case STORY_BOARDS_INTAKE:
+        return 0;
+      default:
+        return 0;
+    }
   }
 
-  public void intakeDown() {
-    setSetpoint(1);
-    setIntakeVoltage(1);
+  public double getIntakeVoltage(intakeState state) {
+    switch (state) {
+      case INTAKING:
+        return 6;
+      case OUTTAKING:
+        return -6;
+      case NOT_RUNNING:
+        return 0;
+      default:
+        return 0;
+    }
   }
+  
+  public static IntakeSubsystem getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new IntakeSubsystem();
+    }
+    return INSTANCE;
+  }
+
 }

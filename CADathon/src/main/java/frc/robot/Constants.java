@@ -16,17 +16,37 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
  */
 public final class Constants {
 
+  /**
+   * Constants relating to the robot
+   */
   public final class RobotConstants {
 
+    /* ---------- CAN Bus Names --------- */
     public static final String CANIVORE_BUS = "CantDrive";
     public static final String RIO_BUS = "Rio";
 
+    /* ---------- Default Neutral Mode for Motors ---------- */
     public static final NeutralModeValue DEFAULT_NEUTRAL_MODE = NeutralModeValue.Brake;
 
+    /**
+     * Constants Specific to the Intake Subsystem
+     */
     public static class IntakeConstants {
       
       public static final int PIVOT_MOTOR_ID = 0;
       public static final int INTAKE_MOTOR_ID = 0;
+
+    }
+
+    /**
+     * Constants specific to the Transfer Subsystem
+     */
+    public static class TransferConstants {
+
+      public static final int TOWER_MOTOR_ID = 0;
+      public static final int SIDE_ROLLERS_MOTOR_ID = 0;
+      public static final int BOTTOM_ROLLERS_MOTOR_ID = 0;
+      public static final int TOWER_CANRANGE_ID = 0;
 
     }
   }

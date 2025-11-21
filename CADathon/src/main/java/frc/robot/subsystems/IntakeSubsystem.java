@@ -16,6 +16,8 @@ import frc.robot.Constants.RobotConstants.IntakeConstants;
 
 public class IntakeSubsystem extends SubsystemBase {
 
+  private static IntakeSubsystem INSTANCE;
+
   TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   PIDController PID = new PIDController(5, 0, 0);
@@ -46,21 +48,11 @@ public class IntakeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public void setIntakeVoltage(double voltage) {
-    motorIntake.setVoltage(voltage);
+  public static IntakeSubsystem getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new IntakeSubsystem();
+    }
+    return INSTANCE;
   }
 
-  public void setSetpoint(double setpoint) {
-    PID.setSetpoint(setpoint);
-  }
-
-  public void intakeUp() {
-    setSetpoint(0);
-    setIntakeVoltage(0);
-  }
-
-  public void intakeDown() {
-    setSetpoint(1);
-    setIntakeVoltage(1);
-  }
 }

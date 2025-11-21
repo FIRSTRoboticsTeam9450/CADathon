@@ -1,41 +1,141 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
+import java.util.HashMap;
+
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
+import frc.robot.Constants.RobotConstants.TransferConstants;
 
+/**
+ * Subsystem for The Transfer System of the robot, This includes managing the storage and movement of game peices
+ * <p>
+ *  The Transfer Subsystem handles both the Hopper and Tower
+ * </p>
+ */
 public class TransferSubsystem extends SubsystemBase {
 
-  TalonFX beltMotor = new TalonFX(0, "CantDrive");
-  CANrange laser = new CANrange(0);
-  boolean justSeen = true;
-  Timer timer = new Timer();
-  double timeLimit = 10;
-  boolean atIntakeLimit = false;
-  /** Creates a new ExampleSubsystem. */
+  //Instance of Subsystem
+  private static TransferSubsystem INSTANCE;
+
+  public enum States {
+    STORING,
+    INTAKING,
+    PREPARING_FOR_SHOT,
+    FEEDING,
+    REJECTING,
+  }
+
+  private States currentState = States.STORING;
+
+  private HashMap<States, double[]> stateVoltageMap = new HashMap<>();
+  
+
+  /* ---------- Devices ---------- */
+  private TalonFX motorTowerWheels = new TalonFX(TransferConstants.TOWER_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorSideRollers = new TalonFX(TransferConstants.SIDE_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorBottomRollers = new TalonFX(TransferConstants.BOTTOM_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
+
   public TransferSubsystem() {
 
+    configureTower();
+    configureHopper();
+
+    configureMap();
+
+  }
+
+  private void configureMap() {
+
+    double[] tmpArr = {0.0, 0.0};
+    stateVoltageMap.put(States.STORING, tmpArr);
+
+    tmpArr[0] = 4.0;
+    tmpArr[1] = -2;
+    stateVoltageMap.put(States.INTAKING, tmpArr);
+
+    tmpArr[0] = 4.0;
+    tmpArr[1] = 2.0;
+    stateVoltageMap.put(States.PREPARING_FOR_SHOT, tmpArr);
+
+    tmpArr[0] = 8;
+    tmpArr[1] = 8;
+    stateVoltageMap.put(States.FEEDING, tmpArr);
+
+    tmpArr[0] = -12;
+    tmpArr[1] = -12;
+    stateVoltageMap.put(States.REJECTING, tmpArr);
+
+  }
+
+  private void configureTower() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 50;
+
+    CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
+    canrangeConfig.ProximityParams.ProximityThreshold = 0.15; // meters, 0.15 is roughly half way, which is when we want to see the ball
+    // canrangeConfig.ProximityParams.MinSignalStrengthForValidMeasurement //This should be used, but will need to see what the value should be when robot is built
+
+    motorTowerWheels.getConfigurator().apply(motorConfig);
+    canrange.getConfigurator().apply(canrangeConfig);
+  }
+
+  private void configureHopper() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 50;
+
+    motorSideRollers.getConfigurator().apply(motorConfig);
+    motorBottomRollers.getConfigurator().apply(motorConfig);
   }
   
   @Override
   public void periodic() {
-    if(laser.getIsDetected().getValue() && justSeen) {
-      justSeen = false;
-      timer.start();
+
+  }
+
+  private void applyStates() {
+
+    double[] voltageArr = stateVoltageMap.get(currentState);
+    
+    double hopperVoltage = voltageArr[0];
+    double towerVoltage = voltageArr[1];
+
+    motorBottomRollers.setVoltage(hopperVoltage);
+    motorSideRollers.setVoltage(hopperVoltage);
+    motorTowerWheels.setVoltage(towerVoltage);
+  }
+
+  public void setWantedState(States wantedState) {
+    currentState = wantedState;
+  }
+
+  public States getCurrentState() {
+    return currentState;
+  }
+
+  public static TransferSubsystem getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new TransferSubsystem();
     }
-    if(timer.get() > timeLimit) {
-      atIntakeLimit
-    }
-    // This method will be called once per scheduler run
+    return INSTANCE;
   }
 
 }

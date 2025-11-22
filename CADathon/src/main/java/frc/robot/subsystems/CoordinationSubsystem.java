@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.TransferSubsystem.States;
+import frc.robot.subsystems.IntakeSubsystem.intakePos;
+import frc.robot.subsystems.IntakeSubsystem.intakeStates;
+import frc.robot.subsystems.TransferSubsystem.transferStates;
 
 public class CoordinationSubsystem extends SubsystemBase{
     
@@ -35,42 +37,59 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     private void applyState() {
 
-        States transferState;
+        transferStates transferState = transferStates.STORING;
+        intakePos intakeState = intakePos.STORE;
+        intakeStates intaking = intakeStates.NOT_RUNNING;
 
         switch (currentState) {
             case STORING:
-                transferState = States.STORING;
+                transferState = transferStates.STORING;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.NOT_RUNNING;
                 break;
             
             case INTAKING_SPEECH:
-                transferState = States.INTAKING;
+                transferState = transferStates.INTAKING;
+                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                intaking = intakeStates.INTAKING;
                 break;
             
             case INTAKING_STORY:
-                transferState = States.STORING;
+                transferState = transferStates.STORING;
+                intakeState = intakePos.STORY_BOARDS_INTAKE;
+                intaking = intakeStates.INTAKING;
                 break;
             
             case PREPARING_FOR_SHOT:
-                transferState = States.PREPARING_FOR_SHOT;
+                transferState = transferStates.PREPARING_FOR_SHOT;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.NOT_RUNNING;
                 break;
 
             case SHOOTING_SPEECH:
-                transferState = States.FEEDING;
+                transferState = transferStates.FEEDING;
+                intakeState = intakePos.STORY_BOARDS_INTAKE; // CHANGE
+                intaking = intakeStates.OUTTAKING;
                 break;
 
             case SHOOT_STORY:
-                transferState = States.STORING;
+                transferState = transferStates.STORING;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.NOT_RUNNING;
                 break;
 
             case REJECTING:
-                transferState = States.REJECTING;
+                transferState = transferStates.REJECTING;
                 break;
             
             default:
-                transferState = States.STORING;
+                transferState = transferStates.STORING;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.NOT_RUNNING;
                 break;
         }
 
+        intakeInstance.goToPos(intakeState, intaking);
         transferInstance.setWantedState(transferState);
     }
 

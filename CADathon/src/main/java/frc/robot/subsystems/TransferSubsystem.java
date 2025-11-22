@@ -23,7 +23,7 @@ public class TransferSubsystem extends SubsystemBase {
   //Instance of Subsystem
   private static TransferSubsystem INSTANCE;
 
-  public enum States {
+  public enum transferStates {
     STORING,
     INTAKING,
     PREPARING_FOR_SHOT,
@@ -31,9 +31,9 @@ public class TransferSubsystem extends SubsystemBase {
     REJECTING,
   }
 
-  private States currentState = States.STORING;
+  private transferStates currentState = transferStates.STORING;
 
-  private HashMap<States, double[]> stateVoltageMap = new HashMap<>();
+  private HashMap<transferStates, double[]> stateVoltageMap = new HashMap<>();
   
 
   /* ---------- Devices ---------- */
@@ -54,23 +54,23 @@ public class TransferSubsystem extends SubsystemBase {
   private void configureMap() {
 
     double[] tmpArr = {0.0, 0.0};
-    stateVoltageMap.put(States.STORING, tmpArr);
+    stateVoltageMap.put(transferStates.STORING, tmpArr);
 
     tmpArr[0] = 4.0;
     tmpArr[1] = -2;
-    stateVoltageMap.put(States.INTAKING, tmpArr);
+    stateVoltageMap.put(transferStates.INTAKING, tmpArr);
 
     tmpArr[0] = 4.0;
     tmpArr[1] = 2.0;
-    stateVoltageMap.put(States.PREPARING_FOR_SHOT, tmpArr);
+    stateVoltageMap.put(transferStates.PREPARING_FOR_SHOT, tmpArr);
 
     tmpArr[0] = 8;
     tmpArr[1] = 8;
-    stateVoltageMap.put(States.FEEDING, tmpArr);
+    stateVoltageMap.put(transferStates.FEEDING, tmpArr);
 
     tmpArr[0] = -12;
     tmpArr[1] = -12;
-    stateVoltageMap.put(States.REJECTING, tmpArr);
+    stateVoltageMap.put(transferStates.REJECTING, tmpArr);
 
   }
 
@@ -123,11 +123,11 @@ public class TransferSubsystem extends SubsystemBase {
     motorTowerWheels.setVoltage(towerVoltage);
   }
 
-  public void setWantedState(States wantedState) {
+  public void setWantedState(transferStates wantedState) {
     currentState = wantedState;
   }
 
-  public States getCurrentState() {
+  public transferStates getCurrentState() {
     return currentState;
   }
 

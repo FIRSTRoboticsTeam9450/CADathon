@@ -22,10 +22,12 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum intakePos {
     SPEECH_BUBBLES_INTAKE,
     STORY_BOARDS_INTAKE,
-    STORE
+    STORE,
+    ZERO,
+    STORY_BOARDS_SCORE
   }
 
-  public enum intakeState {
+  public enum intakeStates {
     INTAKING,
     OUTTAKING,
     NOT_RUNNING
@@ -48,15 +50,20 @@ public class IntakeSubsystem extends SubsystemBase {
   double kG = 0.45;
   DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
-  intakePos currentPos = intakePos.STORE;
+  intakePos currentPos = intakePos.ZERO;
+  intakePos prevPos = intakePos.ZERO;
+  intakePos targetPos = intakePos.ZERO;
+
+  intakeStates currState = intakeStates.NOT_RUNNING;
+  intakeStates targetState = intakeStates.NOT_RUNNING;
 
   boolean resetDone = false;
-  
+  boolean updatedPos = true;
   
   public IntakeSubsystem() {
     configIntakeMotor();
     configIntakePivot();
-    intakePivot.setVoltage(-1);
+    motorPivot.setVoltage(-1);
   }
   
   public void configIntakeMotor() {
@@ -75,30 +82,43 @@ public class IntakeSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
-
-
     // Zero encoder
     if(!resetDone) {
       resetDone = isEncoderReset();
     }
+    if(targetPos != currentPos) {
+      goToPos();
+    }
+    if(currState != targetState) {
+      setIntakeVoltage(getIntakeVoltage(targetState));
+    }
     
   }
 
-  public void goToPos(intakePos targetPos, intakeState state) {
-    if(currentPos == intakePos.STORE) {
+  public void setTargetPos(intakePos targetPos, intakeStates targetState) {
+    this.targetPos = targetPos;
+    this.targetState = targetState;
+  }
+
+  public void goToPos() {
+    prevPos = currentPos;
+    if(prevPos == intakePos.STORE || prevPos == intakePos.STORY_BOARDS_SCORE) {
       setSetpoint(getPosition(targetPos));
-      setIntakeVoltage(getIntakeVoltage(state));
+      currentPos = targetPos;
     }
     else {
       setSetpoint(getPosition(intakePos.STORE));
+      currentPos = intakePos.STORE;
     }
+    updatedPos = true;
     
   }
 
   public boolean isEncoderReset() {
-    if(intakePivot.getVelocity().getValueAsDouble() < .1) {
-      intakePivot.setPosition(0);
-      intakePivot.setVoltage(0);
+    if(motorPivot.getVelocity().getValueAsDouble() < .1) {
+      motorPivot.setPosition(0);
+      motorPivot.setVoltage(0);
+      setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING);
       return true;
     }
     return false;
@@ -107,7 +127,10 @@ public class IntakeSubsystem extends SubsystemBase {
   /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
-    motorIntake.setVoltage(voltage);
+    if(PID.atSetpoint()) {
+      currState = targetState;
+      motorIntake.setVoltage(voltage);
+    }
   }
 
   public void setSetpoint(double setpoint) {
@@ -129,7 +152,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  public double getIntakeVoltage(intakeState state) {
+  public double getIntakeVoltage(intakeStates state) {
     switch (state) {
       case INTAKING:
         return 6;

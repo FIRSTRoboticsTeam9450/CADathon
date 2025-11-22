@@ -64,6 +64,7 @@ public class IntakeSubsystem extends SubsystemBase {
     configIntakeMotor();
     configIntakePivot();
     motorPivot.setVoltage(-1);
+    motorPivot.setVoltage(-1);
   }
   
   public void configIntakeMotor() {

@@ -33,8 +33,8 @@ public final class Constants {
      */
     public static class IntakeConstants {
       
-      public static final int PIVOT_MOTOR_ID = 0;
-      public static final int INTAKE_MOTOR_ID = 0;
+      public static final int PIVOT_MOTOR_ID = 20;
+      public static final int INTAKE_MOTOR_ID = 21;
 
     }
 
@@ -43,10 +43,18 @@ public final class Constants {
      */
     public static class TransferConstants {
 
-      public static final int TOWER_MOTOR_ID = 0;
-      public static final int SIDE_ROLLERS_MOTOR_ID = 0;
-      public static final int BOTTOM_ROLLERS_MOTOR_ID = 0;
-      public static final int TOWER_CANRANGE_ID = 0;
+      public static final int TOWER_MOTOR_ID = 27;
+      public static final int SIDE_ROLLERS_MOTOR_ID = 26;
+      public static final int BOTTOM_ROLLERS_MOTOR_ID = 25;
+      public static final int TOWER_CANRANGE_ID = 28;
+
+    }
+
+    public static class ShooterConstants {
+
+      public static final int FRONT_WHEEL_MOTOR_ID = 30;
+      public static final int BACK_WHEEL_MOTOR_ID = 31;
+      public static final int ANGLE_MOTOR_ID = 32;
 
     }
   }

@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -59,7 +61,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   boolean resetDone = false;
   boolean updatedPos = true;
-  
+  double setpoint;
+
   public IntakeSubsystem() {
     configIntakeMotor();
     configIntakePivot();
@@ -77,6 +80,17 @@ public class IntakeSubsystem extends SubsystemBase {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    
+    Slot0Configs slot0 = config.Slot0;
+    slot0.kS = kS; slot0.kV = kV; slot0.kA = kA;
+    slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
+    slot0.kG = kG;
+
+    MotionMagicConfigs mm = config.MotionMagic;
+    mm.MotionMagicCruiseVelocity = velocity;
+    mm.MotionMagicAcceleration = acceleration;
+    mm.MotionMagicJerk = jerk;
+
     motorPivot.getConfigurator().apply(config);
   }
   
@@ -92,7 +106,12 @@ public class IntakeSubsystem extends SubsystemBase {
     if(currState != targetState) {
       setIntakeVoltage(getIntakeVoltage(targetState));
     }
+    motorPivot.setControl(request.withPosition(setpoint));
     
+  }
+
+  public boolean atSetpoint() {
+    return Math.abs(getPosition(currentPos) - getPosition(targetPos)) < .1;
   }
 
   public void setTargetPos(intakePos targetPos, intakeStates targetState) {
@@ -127,14 +146,14 @@ public class IntakeSubsystem extends SubsystemBase {
   /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
-    if(PID.atSetpoint()) {
+    if(atSetpoint()) {
       currState = targetState;
       motorIntake.setVoltage(voltage);
     }
   }
 
   public void setSetpoint(double setpoint) {
-    PID.setSetpoint(setpoint);
+    this.setpoint = setpoint;
   }
   
   /*** ____________________________________ GETTERS ____________________________________ ***/

@@ -35,33 +35,32 @@ public class IntakeSubsystem extends SubsystemBase {
     NOT_RUNNING
   }
 
-  TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
-  TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS);
-  PIDController PID = new PIDController(5, 0, 0);
+  private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS);
 
-  double velocity = 2;
-  double acceleration = 100;
-  double jerk = 1000;
-  double currentLimit = 130; // 100 is the max stator current pull
-  double kS = 0.6; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
-  double kV = 0.26; // A velocity target of 1 rps results in 0.12 V output .12
-  double kA = 0.017; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
-  double kP = 3; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
-  double kI = 0; // no output for integrated error 0
-  double kD = 0.12; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
-  double kG = 0.45;
-  DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
+  private double velocity = 2;
+  private double acceleration = 100;
+  private double jerk = 1000;
+  private double currentLimit = 60; // 100 is the max stator current pull
+  private double kS = 0.6; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
+  private double kV = 0.26; // A velocity target of 1 rps results in 0.12 V output .12
+  private double kA = 0.017; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
+  private double kP = 3; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
+  private double kI = 0; // no output for integrated error 0
+  private double kD = 0.12; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
+  private double kG = 0.45;
+  private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
-  intakePos currentPos = intakePos.ZERO;
-  intakePos prevPos = intakePos.ZERO;
-  intakePos targetPos = intakePos.ZERO;
+  private intakePos currentPos = intakePos.ZERO;
+  private intakePos prevPos = intakePos.ZERO;
+  private intakePos targetPos = intakePos.ZERO;
 
-  intakeStates currState = intakeStates.NOT_RUNNING;
-  intakeStates targetState = intakeStates.NOT_RUNNING;
+  private intakeStates currState = intakeStates.NOT_RUNNING;
+  private intakeStates targetState = intakeStates.NOT_RUNNING;
 
-  boolean resetDone = false;
-  boolean updatedPos = true;
-  double setpoint;
+  private boolean resetDone = false;
+  private boolean updatedPos = true;
+  private double setpoint;
 
   public IntakeSubsystem() {
     configIntakeMotor();
@@ -86,10 +85,9 @@ public class IntakeSubsystem extends SubsystemBase {
     slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
     slot0.kG = kG;
 
-    MotionMagicConfigs mm = config.MotionMagic;
-    mm.MotionMagicCruiseVelocity = velocity;
-    mm.MotionMagicAcceleration = acceleration;
-    mm.MotionMagicJerk = jerk;
+    config.MotionMagic.MotionMagicAcceleration = acceleration;
+    config.MotionMagic.MotionMagicCruiseVelocity = velocity;
+    config.MotionMagic.MotionMagicJerk = jerk;
 
     motorPivot.getConfigurator().apply(config);
   }

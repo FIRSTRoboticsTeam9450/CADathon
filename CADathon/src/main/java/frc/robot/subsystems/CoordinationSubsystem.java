@@ -69,7 +69,7 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case SHOOTING_SPEECH:
                 transferState = transferStates.FEEDING;
-                intakeState = intakePos.STORY_BOARDS_INTAKE; // CHANGE
+                intakeState = intakePos.STORY_BOARDS_SCORE;
                 intaking = intakeStates.OUTTAKING;
                 break;
 
@@ -90,7 +90,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 break;
         }
 
-        intakeInstance.goToPos(intakeState, intaking);
+        intakeInstance.setTargetPos(intakeState, intaking);
         transferInstance.setWantedState(transferState);
     }
 

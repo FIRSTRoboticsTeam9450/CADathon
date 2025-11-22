@@ -64,7 +64,6 @@ public class IntakeSubsystem extends SubsystemBase {
     configIntakeMotor();
     configIntakePivot();
     motorPivot.setVoltage(-1);
-    motorPivot.setVoltage(-1);
   }
   
   public void configIntakeMotor() {
@@ -147,6 +146,8 @@ public class IntakeSubsystem extends SubsystemBase {
       case SPEECH_BUBBLES_INTAKE:
         return 0;
       case STORY_BOARDS_INTAKE:
+        return 0;
+      case STORY_BOARDS_SCORE:
         return 0;
       default:
         return 0;

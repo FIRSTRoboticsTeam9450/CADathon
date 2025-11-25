@@ -5,8 +5,9 @@
 package frc.robot.subsystems;
 
 
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DynamicMotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -43,6 +44,8 @@ public class ShooterSubsystem extends SubsystemBase {
     configureShooterMotors();
     configureAngleMotor();
 
+    isZeroingDone = false;
+
   }
 
   private void configureShooterMotors() {
@@ -59,7 +62,35 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
+    Slot0Configs slot0 = motorConfig.Slot0;
+    slot0.kS = kS; slot0.kV = kV; slot0.kA = kA;
+    slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
+    slot0.kG = kG;
+
+    motorConfig.Slot0 = slot0;
+
+    motorConfig.MotionMagic.MotionMagicAcceleration = acceleration;
+    motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
+    motorConfig.MotionMagic.MotionMagicJerk = jerk;
+
     motorAngle.getConfigurator().apply(motorConfig);
+  }
+
+  @Override
+  public void periodic() {
+      if (!isZeroingDone) {
+        isZeroingDone = zeroEncoder();
+      }
+  }
+
+  private boolean zeroEncoder() {
+    motorAngle.setVoltage(-1);
+    if (Math.abs(motorAngle.getVelocity().getValueAsDouble()) < 0.1) {
+      motorAngle.setPosition(0);
+      motorAngle.setVoltage(0);
+      return true;
+    }
+    return false;
   }
 
   @Override

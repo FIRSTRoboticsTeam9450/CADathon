@@ -21,14 +21,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static ShooterSubsystem INSTANCE;
 
-  public enum ShooterPos {
-    
-  }
   public enum ShooterState {
     SHOOTING,
     NOT_SHOOTING
   }
   ShooterState currentState = ShooterState.NOT_SHOOTING;
+  
   private TalonFX motorWheelFront = new TalonFX(ShooterConstants.FRONT_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorAngle = new TalonFX(ShooterConstants.ANGLE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
@@ -38,12 +36,29 @@ public class ShooterSubsystem extends SubsystemBase {
   private boolean wheelsSpunUp = false;
   private double shooterPower = 0;
 
+  // Motion Magic parameters
+  private double velocity = 18;
+  private double acceleration = 11;
+  private double jerk = 400;
+
+  // Feedforward and PIDF constants
+  private double currentLimit = 110;
+  private double kS = 0;
+  private double kV = 0.33;
+  private double kA = 0.05;
+  private double kP = 90;
+  private double kI = 0.001;
+  private double kD = 0.35;
+  private double kG = 0.001;
+  private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
+
+  private boolean isZeroingDone = false;
 
   public ShooterSubsystem() {
 
     configureShooterMotors();
     configureAngleMotor();
-
+    
     isZeroingDone = false;
 
   }
@@ -62,26 +77,10 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    Slot0Configs slot0 = motorConfig.Slot0;
-    slot0.kS = kS; slot0.kV = kV; slot0.kA = kA;
-    slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
-    slot0.kG = kG;
-
-    motorConfig.Slot0 = slot0;
-
-    motorConfig.MotionMagic.MotionMagicAcceleration = acceleration;
-    motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
-    motorConfig.MotionMagic.MotionMagicJerk = jerk;
 
     motorAngle.getConfigurator().apply(motorConfig);
   }
 
-  @Override
-  public void periodic() {
-      if (!isZeroingDone) {
-        isZeroingDone = zeroEncoder();
-      }
-  }
 
   private boolean zeroEncoder() {
     motorAngle.setVoltage(-1);
@@ -95,6 +94,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if (!isZeroingDone) {
+      isZeroingDone = zeroEncoder();
+    }
     if(currentState == ShooterState.SHOOTING) {
       shooterPower = velocityPID.calculate(motorWheelFront.getVelocity().getValueAsDouble());
       motorWheelBack.setVoltage(shooterPower);
@@ -103,13 +105,16 @@ public class ShooterSubsystem extends SubsystemBase {
         wheelsSpunUp = true;
       }
     }
+    if()
   }
 
   public boolean shooterReady () {
-    if(wheelsSpunUp) {
-      spinUpWheels = false;
+    if(wheelsSpunUp && angleAtSetpoint()) {
+      return true;
     }
-    
+    return false;
+  }
+  public boolean angleAtSetpoint() {
     return false;
   }
   public void setVelocitySetpoint(double setpoint) {

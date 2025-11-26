@@ -8,6 +8,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -23,9 +24,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public enum ShooterState {
     SHOOTING,
-    NOT_SHOOTING
+    IDLING
   }
-  ShooterState currentState = ShooterState.NOT_SHOOTING;
+  ShooterState currentState = ShooterState.IDLING;
   
   private TalonFX motorWheelFront = new TalonFX(ShooterConstants.FRONT_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
@@ -68,8 +69,12 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
+    motorConfig.Feedback.SensorToMechanismRatio = 9/8; //1.125
+
     motorWheelFront.getConfigurator().apply(motorConfig);
     motorWheelBack.getConfigurator().apply(motorConfig);
+
+    motorWheelBack.setControl(new StrictFollower(motorWheelFront.getDeviceID()));
   }
 
   private void configureAngleMotor() {
@@ -97,26 +102,42 @@ public class ShooterSubsystem extends SubsystemBase {
     if (!isZeroingDone) {
       isZeroingDone = zeroEncoder();
     }
-    if(currentState == ShooterState.SHOOTING) {
-      shooterPower = velocityPID.calculate(motorWheelFront.getVelocity().getValueAsDouble());
-      motorWheelBack.setVoltage(shooterPower);
-      motorWheelFront.setVoltage(shooterPower);
-      if(Math.abs(motorWheelFront.getVelocity().getValueAsDouble() - velocitySetpoint) < .5) {
-        wheelsSpunUp = true;
-      }
-    }
-    if()
+    applyState();
   }
 
-  public boolean shooterReady () {
-    if(wheelsSpunUp && angleAtSetpoint()) {
-      return true;
+  private void applyState() {
+    if(currentState == ShooterState.SHOOTING) {
+
+      shooterPower = velocityPID.calculate(motorWheelFront.getVelocity().getValueAsDouble());
+      motorWheelFront.setVoltage(shooterPower);
+
+      wheelsSpunUp = rpmWithinTolerance();
+    } else if (currentState == ShooterState.IDLING) {
+      motorWheelFront.setVoltage(0);
     }
-    return false;
   }
-  public boolean angleAtSetpoint() {
-    return false;
+
+  /* --------------- Calculations --------------- */
+
+  /**
+   * uses a default tolerance
+   * @return
+   */
+  private boolean rpmWithinTolerance() {
+    return rpmWithinTolerance(.5);
   }
+
+  /**
+   * Calculates if the RPS of the shooter is withing a certain range of where we wish it to be
+   * @param tolerance rotation per second off it can be from where we want it to be
+   * @return if withing tolerance
+   */
+  private boolean rpmWithinTolerance(double tolerance) {
+    return Math.abs(velocitySetpoint - motorWheelFront.getVelocity().getValueAsDouble()) < tolerance;
+  }
+
+  /* --------------- Setters --------------- */
+
   public void setVelocitySetpoint(double setpoint) {
     velocityPID.setSetpoint(setpoint);
     velocitySetpoint = setpoint;
@@ -124,6 +145,20 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setShooterPower(double shooterPower) {
     this.shooterPower = shooterPower;
   }
+
+  /* --------------- Getters -------------- */
+
+  public boolean shooterReady () {
+    if(wheelsSpunUp && angleAtSetpoint()) {
+      return true;
+    }
+    return false;
+  }
+
+  public boolean angleAtSetpoint() {
+    return false;
+  }
+
   public static ShooterSubsystem getInsatnce() {
     if (INSTANCE == null) {
       INSTANCE = new ShooterSubsystem();

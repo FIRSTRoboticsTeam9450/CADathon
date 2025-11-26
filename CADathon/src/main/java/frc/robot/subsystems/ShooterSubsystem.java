@@ -194,6 +194,10 @@ public class ShooterSubsystem extends SubsystemBase {
     angleSetpoint = setpoint;
   }
 
+  public void setWantedState(AngleState angleState, ShooterState shooterState) {
+    currentAngleState = angleState;
+    currentShooterState = shooterState;
+  }
   /* --------------- Getters -------------- */
 
   public boolean shooterReady () {
@@ -207,7 +211,7 @@ public class ShooterSubsystem extends SubsystemBase {
     return false;
   }
 
-  public static ShooterSubsystem getInsatnce() {
+  public static ShooterSubsystem getInstance() {
     if (INSTANCE == null) {
       INSTANCE = new ShooterSubsystem();
     }

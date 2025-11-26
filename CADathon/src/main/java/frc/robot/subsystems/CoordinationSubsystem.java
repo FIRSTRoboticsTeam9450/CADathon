@@ -1,8 +1,12 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
+import frc.robot.subsystems.ShooterSubsystem.AngleState;
+import frc.robot.subsystems.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.TransferSubsystem.transferStates;
 
 public class CoordinationSubsystem extends SubsystemBase{
@@ -11,7 +15,7 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     private IntakeSubsystem intakeInstance = IntakeSubsystem.getInstance();
     private TransferSubsystem transferInstance = TransferSubsystem.getInstance();
-
+    private ShooterSubsystem shooterInstance = ShooterSubsystem.getInstance();
     public enum AbsoluteStates {
         STORING,
         INTAKING_SPEECH,
@@ -41,42 +45,56 @@ public class CoordinationSubsystem extends SubsystemBase{
         transferStates transferState = transferStates.STORING;
         intakePos intakeState = intakePos.STORE;
         intakeStates intaking = intakeStates.NOT_RUNNING;
+        ShooterState shooterState = ShooterState.IDLING;
+        AngleState shooterAngleState = AngleState.IDLING;
 
         switch (currentState) {
             case STORING:
                 transferState = transferStates.STORING;
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.NOT_RUNNING;
+                shooterState = ShooterState.IDLING;
+                shooterAngleState = AngleState.IDLING;
                 break;
             
             case INTAKING_SPEECH:
                 transferState = transferStates.INTAKING;
                 intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
+                shooterState = ShooterState.IDLING;
+                shooterAngleState = AngleState.IDLING;
                 break;
             
             case INTAKING_STORY:
                 transferState = transferStates.STORING;
                 intakeState = intakePos.STORY_BOARDS_INTAKE;
                 intaking = intakeStates.INTAKING;
+                shooterState = ShooterState.IDLING;
+                shooterAngleState = AngleState.IDLING;
                 break;
             
             case PREPARING_FOR_SHOT:
                 transferState = transferStates.PREPARING_FOR_SHOT;
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.NOT_RUNNING;
+                shooterState = ShooterState.SHOOTING;
+                shooterAngleState = AngleState.AIMING;
                 break;
 
             case SHOOTING_SPEECH:
                 transferState = transferStates.FEEDING;
                 intakeState = intakePos.STORY_BOARDS_SCORE;
                 intaking = intakeStates.OUTTAKING;
+                shooterState = ShooterState.SHOOTING;
+                shooterAngleState = AngleState.AIMING;
                 break;
 
             case SHOOT_STORY:
                 transferState = transferStates.STORING;
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.NOT_RUNNING;
+                shooterState = ShooterState.IDLING;
+                shooterAngleState = AngleState.IDLING;
                 break;
 
             case REJECTING:
@@ -87,11 +105,15 @@ public class CoordinationSubsystem extends SubsystemBase{
                 transferState = transferStates.STORING;
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.NOT_RUNNING;
+                shooterState = ShooterState.IDLING;
+                shooterAngleState = AngleState.IDLING;
                 break;
         }
 
         intakeInstance.setTargetPos(intakeState, intaking);
         transferInstance.setWantedState(transferState);
+        shooterInstance.setWantedState(shooterAngleState, shooterState);
+        
     }
 
     public void setState(AbsoluteStates wantedState) {

@@ -132,7 +132,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean isEncoderReset() {
-    if(motorPivot.getVelocity().getValueAsDouble() < .1) {
+    if(Math.abs(motorPivot.getVelocity().getValueAsDouble()) < .1) {
       motorPivot.setPosition(0);
       motorPivot.setVoltage(0);
       setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING);

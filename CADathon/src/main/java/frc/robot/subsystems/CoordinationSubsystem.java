@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
@@ -16,6 +14,7 @@ public class CoordinationSubsystem extends SubsystemBase{
     private IntakeSubsystem intakeInstance = IntakeSubsystem.getInstance();
     private TransferSubsystem transferInstance = TransferSubsystem.getInstance();
     private ShooterSubsystem shooterInstance = ShooterSubsystem.getInstance();
+
     public enum AbsoluteStates {
         STORING,
         INTAKING_SPEECH,
@@ -26,8 +25,16 @@ public class CoordinationSubsystem extends SubsystemBase{
         REJECTING
     }
 
+    public enum ScoringLocation {
+        UPTOWN,
+        DOWNTOWN,
+        EAST_FOOTHILLS,
+        WEST_FOOTHILLS
+    }
+
     private AbsoluteStates currentState = AbsoluteStates.STORING;
-    private AbsoluteStates previousState = currentState;
+
+    private ScoringLocation wantedScoringLocation = ScoringLocation.DOWNTOWN;
 
     private boolean hasStateChanged = false;
 
@@ -117,7 +124,6 @@ public class CoordinationSubsystem extends SubsystemBase{
     }
 
     public void setState(AbsoluteStates wantedState) {
-        previousState = currentState;
         currentState = wantedState;
         hasStateChanged = true;
     }

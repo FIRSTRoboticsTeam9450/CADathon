@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
@@ -12,7 +11,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
@@ -41,7 +39,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private double velocity = 2;
   private double acceleration = 100;
   private double jerk = 1000;
-  private double currentLimit = 60; // 100 is the max stator current pull
   private double kS = 0.6; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
   private double kV = 0.26; // A velocity target of 1 rps results in 0.12 V output .12
   private double kA = 0.017; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
@@ -69,27 +66,44 @@ public class IntakeSubsystem extends SubsystemBase {
   }
   
   public void configIntakeMotor() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    motorIntake.getConfigurator().apply(config);
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
+
+    motorIntake.getConfigurator().apply(motorConfig);
   }
   
   public void configIntakePivot() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
     
-    Slot0Configs slot0 = config.Slot0;
+    Slot0Configs slot0 = motorConfig.Slot0;
     slot0.kS = kS; slot0.kV = kV; slot0.kA = kA;
     slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
     slot0.kG = kG;
 
-    config.MotionMagic.MotionMagicAcceleration = acceleration;
-    config.MotionMagic.MotionMagicCruiseVelocity = velocity;
-    config.MotionMagic.MotionMagicJerk = jerk;
+    motorConfig.Slot0 = slot0;
 
-    motorPivot.getConfigurator().apply(config);
+    motorConfig.MotionMagic.MotionMagicAcceleration = acceleration;
+    motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
+    motorConfig.MotionMagic.MotionMagicJerk = jerk;
+
+    motorPivot.getConfigurator().apply(motorConfig);
   }
   
   @Override
@@ -128,7 +142,6 @@ public class IntakeSubsystem extends SubsystemBase {
       currentPos = intakePos.STORE;
     }
     updatedPos = true;
-    
   }
 
   public boolean isEncoderReset() {

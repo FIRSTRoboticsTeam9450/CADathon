@@ -54,7 +54,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private double mmJerk = 400;
 
   // Feedforward and PIDF constants
-  private double currentLimit = 110;
   private double kS = 0;
   private double kV = 0.33;
   private double kA = 0.05;
@@ -80,6 +79,13 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 3;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
+
     motorConfig.Feedback.SensorToMechanismRatio = 9/8; //1.125
 
     motorWheelFront.getConfigurator().apply(motorConfig);
@@ -92,6 +98,13 @@ public class ShooterSubsystem extends SubsystemBase {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
     motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     Slot0Configs slot0Config = new Slot0Configs().withKS(kS)
                                                  .withKV(kV)

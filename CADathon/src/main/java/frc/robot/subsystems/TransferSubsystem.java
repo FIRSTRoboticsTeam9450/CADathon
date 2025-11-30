@@ -84,9 +84,11 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     motorConfig.CurrentLimits.StatorCurrentLimit = 80;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 50;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
     canrangeConfig.ProximityParams.ProximityThreshold = 0.15; // meters, 0.15 is roughly half way, which is when we want to see the ball
@@ -102,9 +104,11 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     motorConfig.CurrentLimits.StatorCurrentLimit = 80;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 50;
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     motorSideRollers.getConfigurator().apply(motorConfig);
     motorBottomRollers.getConfigurator().apply(motorConfig);

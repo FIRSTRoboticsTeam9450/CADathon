@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
+import frc.robot.Constants;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontLeft;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
 import frc.robot.util.LimelightHelpers;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
+import org.opencv.core.Mat;
 
 /**
  * VisionSubsystem using Limelights with:
@@ -290,6 +292,18 @@ public class VisionSubsystem extends SubsystemBase {
         return lastVisionPose.getTranslation().getDistance(target.getTranslation());
     }
 
+    public targetData getTargetData(String town) {
+        if(town.equals("uptown") ) {
+
+        }
+        else if(town.equals("downtown")) {
+
+        }
+        else if(town.equals("district")) {
+
+        }
+    }
+    
     /**
      * Computes the robot-to-target transform in robot frame.
      */
@@ -310,15 +324,21 @@ public class VisionSubsystem extends SubsystemBase {
      * Uses fallback linear model if vision unavailable.
      * REPLACE WITH CALCULATIONS ON WHITEBOARD WHEN CAN GET THEM
      */
-    public ShooterSettings recommendShooterForTarget(Pose2d target) {
+    public ShooterSettings recommendShooterForTarget(Pose2d target, String town) {
 
         lastTargetPose = target;
         
+        targetData targetData = getTargetData(town);
         double dist = getDistanceToTarget(target);
-        if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
+        double targetHeight = targetData.targetHeight;
+        double targetAngle = targetData.targetAngle;
+        double distOffset = targetData.distanceOffset;
 
-        double rpm = fallbackRPMPerMeter * dist + fallbackRPMIntercept;
-        double hood = fallbackHoodPerMeter * dist + fallbackHoodIntercept;
+        if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
+        double hood = Math.atan(2 * (targetHeight - Constants.ShooterConstants.SHOOTER_HEIGHT)/dist - Math.tan(targetAngle));
+        double rpm = 1/Math.cos(targetAngle) * Math.sqrt(9.81 * dist/ Math.abs(Math.tan(targetAngle) - Math.tan(hood)));
+        // double rpm = fallbackRPMPerMeter * dist + fallbackRPMIntercept;
+        // double hood = fallbackHoodPerMeter * dist + fallbackHoodIntercept;
 
         return new ShooterSettings(hood, rpm);
     }
@@ -367,6 +387,12 @@ public class VisionSubsystem extends SubsystemBase {
         public String toString() {
             return String.format("Hood=%.2fdeg, RPM=%.0f", hoodDegrees, wheelRPM);
         }
+    }
+
+    public static class targetData {
+        public final double targetAngle;
+        public final double targetHeight;
+        public final double distanceOffset;
     }
 
     /**

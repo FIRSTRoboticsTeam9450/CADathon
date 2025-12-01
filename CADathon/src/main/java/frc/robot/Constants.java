@@ -80,6 +80,7 @@ public final class Constants {
       public static final int BACK_WHEEL_MOTOR_ID = 31;
       public static final int ANGLE_MOTOR_ID = 32;
 
+      public static final double SHOOTER_HEIGHT = .5; // meters
       public static final double FLYWHEEL_OFFSET_OF_ROBOT_CENTER = 3.572; //inches
 
     }

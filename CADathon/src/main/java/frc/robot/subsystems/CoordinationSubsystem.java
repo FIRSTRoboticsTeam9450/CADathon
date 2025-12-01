@@ -28,8 +28,8 @@ public class CoordinationSubsystem extends SubsystemBase{
     public enum ScoringLocation {
         UPTOWN,
         DOWNTOWN,
-        EAST_FOOTHILLS,
-        WEST_FOOTHILLS
+        FOOTHILLS_LOW,
+        FOOTHILLS_HIGH
     }
 
     private AbsoluteStates currentState = AbsoluteStates.STORING;
@@ -126,6 +126,10 @@ public class CoordinationSubsystem extends SubsystemBase{
     public void setState(AbsoluteStates wantedState) {
         currentState = wantedState;
         hasStateChanged = true;
+    }
+
+    public void setScoringLocation(ScoringLocation location) {
+        wantedScoringLocation = location;
     }
 
     public static CoordinationSubsystem getInstance() {

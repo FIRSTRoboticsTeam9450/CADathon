@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
+
 /**
  * VisionSubsystem using Limelights with:
  *  - Fusion of multiple cameras
@@ -48,10 +50,14 @@ public class VisionSubsystem extends SubsystemBase {
         return instance;
     }
 
+    public static synchronized VisionSubsystem getInstance() {
+        return getInstance(drivetrain);
+    }
+
     // -------------------------
     // Core subsystem fields
     // -------------------------
-    private final CommandSwerveDrivetrain drivetrain; // Reference to drivetrain for pose updates
+    private static CommandSwerveDrivetrain drivetrain; // Reference to drivetrain for pose updates
 
     private volatile Pose2d lastVisionPose = null;  // Last pose estimated from fused vision
     private volatile double lastVisionTimestamp = 0.0; // Timestamp of last vision update
@@ -80,10 +86,15 @@ public class VisionSubsystem extends SubsystemBase {
     private volatile double lastFLConfidence = 0.0; // Last confidence reading from front-left camera
     private volatile double lastFRConfidence = 0.0; // Last confidence reading from front-right camera
     private volatile Pose2d lastFusedPose = null;   // Last fused pose from vision
+    private volatile Pose2d lastFLPose = null;      // Last known pose from only FL data
+    private volatile Pose2d lastFRPose = null;      // Last known pose from only FR data
+    private volatile Pose2d lastTargetPose = null;
+
 
     // -------------------------
     // Constructor (private for singleton)
     // -------------------------
+    @SuppressWarnings("static-access")
     private VisionSubsystem(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
@@ -146,9 +157,11 @@ public class VisionSubsystem extends SubsystemBase {
         // Update each Limelight with current robot yaw
         LimelightHelpers.SetRobotOrientation(limelightFL.getName(), robotYaw, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate peFL = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFL.getName());
+        lastFLPose = peFL.pose;
 
         LimelightHelpers.SetRobotOrientation(limelightFR.getName(), robotYaw, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate peFR = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFR.getName());
+        lastFRPose = peFR.pose;
 
         // Convert raw Limelight data into VisionMeasurement objects
         VisionMeasurement vmFL = createVisionMeasurement(peFL, limelightFL.getName());
@@ -249,8 +262,15 @@ public class VisionSubsystem extends SubsystemBase {
     // Logging
     // -------------------------
     private void publishLogs() {
-        System.out.printf("[Vision] FusedPose: %s | FLConf: %.2f | FRConf: %.2f%n",
-                lastFusedPose, lastFLConfidence, lastFRConfidence);
+        Logger.recordOutput("HeroHeist/Vision/Total/Last Vision Pose", lastVisionPose);
+        Logger.recordOutput("HeroHeist/Vision/Total/Last Fused Pose", lastFusedPose);
+        Logger.recordOutput("HeroHeist/Vision/Total/Last Target Pose", lastTargetPose);
+
+        Logger.recordOutput("HeroHeist/Vision/FL/Last FL-Data only Pose", lastFLPose);
+        Logger.recordOutput("HeroHeist/Vision/FL/Last FL Confidence", lastFLConfidence);
+
+        Logger.recordOutput("HeroHeist/Vision/FR/Last FR-Data only Pose", lastFRPose);
+        Logger.recordOutput("HeroHeist/Vision/FR/Last FR Confidence", lastFRConfidence);
     }
 
     // -------------------------
@@ -266,6 +286,7 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public double getDistanceToTarget(Pose2d target) {
         if (lastVisionPose == null) return Double.POSITIVE_INFINITY;
+        lastTargetPose = target;
         return lastVisionPose.getTranslation().getDistance(target.getTranslation());
     }
 
@@ -274,6 +295,8 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public Transform2d getRobotToTarget(Pose2d target) {
         if (lastVisionPose == null) return null;
+
+        lastTargetPose = target;
 
         Translation2d deltaField = target.getTranslation().minus(lastVisionPose.getTranslation());
         Translation2d translationRobotFrame = deltaField.rotateBy(lastVisionPose.getRotation().unaryMinus());
@@ -285,8 +308,12 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Provides shooter hood angle and wheel RPM recommendations based on distance.
      * Uses fallback linear model if vision unavailable.
+     * REPLACE WITH CALCULATIONS ON WHITEBOARD WHEN CAN GET THEM
      */
     public ShooterSettings recommendShooterForTarget(Pose2d target) {
+
+        lastTargetPose = target;
+        
         double dist = getDistanceToTarget(target);
         if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
 
@@ -317,6 +344,11 @@ public class VisionSubsystem extends SubsystemBase {
     public void setMaxDiffForFusion(double translationMeters, double rotationRadians) {
         this.maxTranslationDiff = translationMeters;
         this.maxRotationDiff = rotationRadians;
+    }
+
+    @SuppressWarnings("static-access")
+    public void setDrivetrainInstance(CommandSwerveDrivetrain drivetrain) {
+        this.drivetrain = drivetrain;
     }
 
     // -------------------------

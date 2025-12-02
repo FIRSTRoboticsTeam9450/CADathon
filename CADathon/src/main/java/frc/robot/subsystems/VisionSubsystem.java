@@ -293,8 +293,9 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public targetData getTargetData(String town) {
+        
         if(town.equals("uptown") ) {
-
+            
         }
         else if(town.equals("downtown")) {
 
@@ -390,9 +391,9 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public static class targetData {
-        public final double targetAngle;
-        public final double targetHeight;
-        public final double distanceOffset;
+        public double targetAngle;
+        public double targetHeight;
+        public double distanceOffset;
     }
 
     /**

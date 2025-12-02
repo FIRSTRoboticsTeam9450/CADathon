@@ -84,6 +84,19 @@ public final class Constants {
       public static final double FLYWHEEL_OFFSET_OF_ROBOT_CENTER = 3.572; //inches
 
     }
+    
+    public static class TargetConstants {
+      public static final int UPTOWN_ANGLE = 45; // Degrees
+      public static final double UPTOWN_HEIGHT = 1.7395;
+      public static final double UPTOWN_OFFSET = 0.4265;
+      public static final int DOWNTOWN_ANGLE = 0; // Degrees
+      public static final double DOWNTOWN_HEIGHT = 1.067;
+      public static final double DOWNTOWN_OFFSET = 0.483;
+      public static final int DISTRICT_ANGLE = 90; // Degrees
+      public static final double DISTRICT_HEIGHT_LOW = 1.181;
+      public static final double DISTRICT_HEIGHT_HIGH = 6.629;
+      public static final double DISTRICT_OFFSET = 0;
+    }
   }
 
 }

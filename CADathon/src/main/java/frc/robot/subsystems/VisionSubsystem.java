@@ -9,11 +9,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.RobotContainer;
-
+import frc.robot.Constants;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontLeft;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
-
+import frc.robot.Constants.RobotConstants.TargetConstants;
 import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
 
 import frc.robot.util.LimelightHelpers;
@@ -301,16 +301,16 @@ public class VisionSubsystem extends SubsystemBase {
     public targetData getTargetData(ScoringLocation town) {
         switch (town) {
             case DOWNTOWN:
-                break;
+                return new targetData(TargetConstants.DOWNTOWN_ANGLE, TargetConstants.DOWNTOWN_HEIGHT, TargetConstants.DOWNTOWN_OFFSET);
 
             case UPTOWN:
-                break;
+                return new targetData(TargetConstants.UPTOWN_ANGLE, TargetConstants.UPTOWN_HEIGHT, TargetConstants.UPTOWN_OFFSET);
 
             case FOOTHILLS_HIGH:
-                break;
+                return new targetData(TargetConstants.FOOTHILLS_ANGLE, TargetConstants.FOOTHILLS_HEIGHT_HIGH, TargetConstants.FOOTHILLS_OFFSET);
 
             case FOOTHILLS_LOW:
-                break;
+                return new targetData(TargetConstants.FOOTHILLS_ANGLE, TargetConstants.FOOTHILLS_HEIGHT_LOW, TargetConstants.FOOTHILLS_OFFSET);
 
         }
         return null;
@@ -342,8 +342,8 @@ public class VisionSubsystem extends SubsystemBase {
         
         targetData targetData = getTargetData(town);
         double dist = getDistanceToTarget(target);
-        double targetHeight = targetData.targetHeight;
-        double targetAngle = targetData.targetAngle;
+        double targetHeight = targetData.height;
+        double targetAngle = targetData.angle;
         double distOffset = targetData.distanceOffset;
 
         if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
@@ -402,9 +402,14 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public static class targetData {
-        public double targetAngle;
-        public double targetHeight;
+        public double angle;
+        public double height;
         public double distanceOffset;
+        public targetData(double targetAngle, double targetHeight, double distOffset) {
+            angle = targetAngle;
+            height = targetHeight;
+            distanceOffset = distOffset;
+        }
     }
 
     /**

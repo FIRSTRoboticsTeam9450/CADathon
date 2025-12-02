@@ -92,10 +92,10 @@ public final class Constants {
       public static final int DOWNTOWN_ANGLE = 0; // Degrees
       public static final double DOWNTOWN_HEIGHT = 1.067;
       public static final double DOWNTOWN_OFFSET = 0.483;
-      public static final int DISTRICT_ANGLE = 90; // Degrees
-      public static final double DISTRICT_HEIGHT_LOW = 1.181;
-      public static final double DISTRICT_HEIGHT_HIGH = 6.629;
-      public static final double DISTRICT_OFFSET = 0;
+      public static final int FOOTHILLS_ANGLE = 90; // Degrees
+      public static final double FOOTHILLS_HEIGHT_LOW = 1.181;
+      public static final double FOOTHILLS_HEIGHT_HIGH = 6.629;
+      public static final double FOOTHILLS_OFFSET = 0;
     }
   }
 

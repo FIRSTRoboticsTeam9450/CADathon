@@ -16,6 +16,7 @@ public class CoordinationSubsystem extends SubsystemBase{
     private ShooterSubsystem shooterInstance = ShooterSubsystem.getInstance();
 
     public enum AbsoluteStates {
+        SHOOTER_OVERRIDE,
         STORING,
         INTAKING_SPEECH,
         INTAKING_STORY,
@@ -54,8 +55,12 @@ public class CoordinationSubsystem extends SubsystemBase{
         intakeStates intaking = intakeStates.NOT_RUNNING;
         ShooterState shooterState = ShooterState.IDLING;
         AngleState shooterAngleState = AngleState.IDLING;
-
+        
         switch (currentState) {
+            case SHOOTER_OVERRIDE:
+                shooterState = ShooterState.SHOOTING;
+                shooterAngleState = AngleState.OVERRIDE;
+                
             case STORING:
                 transferState = transferStates.STORING;
                 intakeState = intakePos.STORE;

@@ -1,18 +1,25 @@
 package frc.robot.subsystems;
 
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.RobotContainer;
-import frc.robot.Constants;
+
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontLeft;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
+import frc.robot.Constants.RobotConstants.ShooterConstants;
+
+import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
+
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightObject;
 import frc.robot.util.LimelightObject.Location;
+
 import com.ctre.phoenix6.Utils;
 
 import java.util.ArrayList;
@@ -20,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
-import org.opencv.core.Mat;
 
 /**
  * VisionSubsystem using Limelights with:
@@ -292,16 +298,22 @@ public class VisionSubsystem extends SubsystemBase {
         return lastVisionPose.getTranslation().getDistance(target.getTranslation());
     }
 
-    public targetData getTargetData(String town) {
-        if(town.equals("uptown") ) {
+    public targetData getTargetData(ScoringLocation town) {
+        switch (town) {
+            case DOWNTOWN:
+                break;
+
+            case UPTOWN:
+                break;
+
+            case FOOTHILLS_HIGH:
+                break;
+
+            case FOOTHILLS_LOW:
+                break;
 
         }
-        else if(town.equals("downtown")) {
-
-        }
-        else if(town.equals("district")) {
-
-        }
+        return null;
     }
     
     /**
@@ -324,7 +336,7 @@ public class VisionSubsystem extends SubsystemBase {
      * Uses fallback linear model if vision unavailable.
      * REPLACE WITH CALCULATIONS ON WHITEBOARD WHEN CAN GET THEM
      */
-    public ShooterSettings recommendShooterForTarget(Pose2d target, String town) {
+    public ShooterSettings recommendShooterForTarget(Pose2d target, ScoringLocation town) {
 
         lastTargetPose = target;
         
@@ -335,7 +347,7 @@ public class VisionSubsystem extends SubsystemBase {
         double distOffset = targetData.distanceOffset;
 
         if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
-        double hood = Math.atan(2 * (targetHeight - Constants.ShooterConstants.SHOOTER_HEIGHT)/dist - Math.tan(targetAngle));
+        double hood = Math.atan(2 * (targetHeight - ShooterConstants.SHOOTER_HEIGHT)/dist - Math.tan(targetAngle));
         double rpm = 1/Math.cos(targetAngle) * Math.sqrt(9.81 * dist/ Math.abs(Math.tan(targetAngle) - Math.tan(hood)));
         // double rpm = fallbackRPMPerMeter * dist + fallbackRPMIntercept;
         // double hood = fallbackHoodPerMeter * dist + fallbackHoodIntercept;
@@ -390,9 +402,9 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public static class targetData {
-        public final double targetAngle;
-        public final double targetHeight;
-        public final double distanceOffset;
+        public double targetAngle;
+        public double targetHeight;
+        public double distanceOffset;
     }
 
     /**

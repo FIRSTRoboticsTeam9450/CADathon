@@ -10,10 +10,10 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
@@ -29,6 +29,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public enum AngleState {
+    OVERRIDE,
     STORING,
     IDLING,
     AIMING
@@ -47,10 +48,11 @@ public class ShooterSubsystem extends SubsystemBase {
   private double shooterPower = 0;
 
   private double angleSetpoint = 0;
+  private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private double mmVelocity = 18;
-  private double mmAcceleration = 11;
+  private double mmVelocity = 2;
+  private double mmAcceleration = 1;
   private double mmJerk = 400;
 
   // Feedforward and PIDF constants
@@ -63,12 +65,16 @@ public class ShooterSubsystem extends SubsystemBase {
   private double kG = 0.001;
   private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
 
+  private final double maxdHoodVoltage;
+
   private boolean isZeroingDone = false;
 
   public ShooterSubsystem() {
 
     configureShooterMotors();
     configureAngleMotor();
+
+    maxdHoodVoltage = 0.15;
     
     isZeroingDone = false;
 
@@ -100,11 +106,11 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 20;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
+    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.3;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 10;
+    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
 
     Slot0Configs slot0Config = new Slot0Configs().withKS(kS)
                                                  .withKV(kV)
@@ -138,8 +144,8 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (!isZeroingDone) {
-      currentAngleState = AngleState.STORING;
-      isZeroingDone = zeroEncoder();
+      // currentAngleState = AngleState.STORING;
+      // isZeroingDone = zeroEncoder();
     }
     applyState();
   }
@@ -159,6 +165,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     switch (currentAngleState) {
+      case OVERRIDE:
+        motorAngle.setVoltage(angleVoltage);
+        break;
+
       case STORING:
         setShooterAngleSetpoint(0);
         motorAngle.setControl(request.withPosition(0));
@@ -211,6 +221,16 @@ public class ShooterSubsystem extends SubsystemBase {
     currentAngleState = angleState;
     currentShooterState = shooterState;
   }
+
+  /**
+   * Only takes effect if Angle state is in OVERRIDE, if not then it'll use PID-type controlling
+   * @param voltage
+   */
+  public void setAngleVoltage(double voltage) {
+    voltage = MathUtil.clamp(voltage, -maxdHoodVoltage, maxdHoodVoltage);
+    angleVoltage = voltage;
+  }
+
   /* --------------- Getters -------------- */
 
   public boolean shooterReady () {

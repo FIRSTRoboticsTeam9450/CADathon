@@ -7,11 +7,15 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.CoordinationSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 import frc.robot.util.BezierCurve;
 
 /**
@@ -24,6 +28,8 @@ public class RobotContainer {
 
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
   private final VisionSubsystem vision;
+  private final CoordinationSubsystem coordSub;
+  private final ShooterSubsystem shooterSub;
 
   public static double pigeonOffset = 0;
 
@@ -51,6 +57,8 @@ public class RobotContainer {
   public RobotContainer() {
 
     vision = VisionSubsystem.getInstance(drivetrain);
+    coordSub = CoordinationSubsystem.getInstance();
+    shooterSub = ShooterSubsystem.getInstance();
 
     // Configure the trigger bindings
     configureBindings();
@@ -76,6 +84,23 @@ public class RobotContainer {
             )
         );
 
+    DRIVER.povUp()
+          .whileTrue(
+            new InstantCommand(() -> coordSub.setState(AbsoluteStates.SHOOTER_OVERRIDE))
+            .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
+          );
+
+    DRIVER.povDown()
+          .whileTrue(
+            new InstantCommand(() -> coordSub.setState(AbsoluteStates.SHOOTER_OVERRIDE))
+            .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
+          );
+
+    DRIVER.povDown()
+          .or(DRIVER.povUp())
+          .onFalse(
+            new InstantCommand(() -> shooterSub.setAngleVoltage(0))
+          );
   }
 
   /**

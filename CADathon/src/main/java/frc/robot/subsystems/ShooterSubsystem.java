@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
@@ -62,10 +64,14 @@ public class ShooterSubsystem extends SubsystemBase {
   private final double mmKG = 0.001;
   private final DynamicMotionMagicVoltage mmRequest;
 
-  private final double vKS = 0.1;
-  private final double vKV = 0.12;
-  private final double vKP = 0.11;
-  private final double vKFF = 0.5;
+  private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
+  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.12);
+  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.11);
+  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0.5);
+  private double vKS = logVKS.get();
+  private double vKV = logVKV.get();
+  private double vKP = logVKP.get();
+  private double vKFF = logVKFF.get();
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
   private double velocitySetpoint = 0;
@@ -145,6 +151,19 @@ public class ShooterSubsystem extends SubsystemBase {
     // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2; //Set this to however many rotations the motor encoder reads when the hood is just about to run off the gears.
 
     motorAngle.getConfigurator().apply(motorConfig);
+  }
+
+  private void updateShooterVelocityConstants() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
+    Slot0Configs slot0Config = new Slot0Configs().withKS(vKS)
+                                                 .withKV(vKV)
+                                                 .withKP(vKP);
+
+    motorConfig.Slot0 = slot0Config;
+
+    motorWheelFront.getConfigurator().apply(motorConfig);
+    motorWheelBack.getConfigurator().apply(motorConfig);
   }
 
 
@@ -242,6 +261,28 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setAngleVoltage(double voltage) {
     voltage = MathUtil.clamp(voltage, -maxdHoodVoltage, maxdHoodVoltage);
     angleVoltage = voltage;
+  }
+
+  public void updateShooterConstants() {
+    boolean updateVals = false;
+
+    double lKSVal = logVKS.get();
+    double lKVVal = logVKV.get();
+    double lKPVal = logVKP.get();
+    double lKFFVal = logVKFF.get();
+
+    updateVals = (vKS != lKSVal)
+              || (vKV != lKVVal)
+              || (vKP != lKPVal)
+              || (vKFF != lKFFVal);
+
+    if (updateVals) {
+      vKS = lKSVal;
+      vKV = lKVVal;
+      vKP = lKPVal;
+      vKFF = lKFFVal;
+      updateShooterVelocityConstants();
+    }
   }
 
   /* --------------- Getters -------------- */

@@ -72,8 +72,8 @@ public class TransferSubsystem extends SubsystemBase {
     tmpArr[1] = 8;
     stateVoltageMap.put(transferStates.FEEDING, tmpArr);
 
-    tmpArr[0] = -12;
-    tmpArr[1] = -12;
+    tmpArr[0] = -6;
+    tmpArr[1] = -6;
     stateVoltageMap.put(transferStates.REJECTING, tmpArr);
 
   }

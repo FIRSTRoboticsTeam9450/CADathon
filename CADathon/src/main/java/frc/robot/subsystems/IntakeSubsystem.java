@@ -56,7 +56,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates targetState = intakeStates.NOT_RUNNING;
 
   private boolean resetDone = false;
-  private boolean updatedPos = true;
   private double setpoint;
 
   public IntakeSubsystem() {
@@ -141,7 +140,6 @@ public class IntakeSubsystem extends SubsystemBase {
       setSetpoint(getPosition(intakePos.STORE));
       currentPos = intakePos.STORE;
     }
-    updatedPos = true;
   }
 
   public boolean isEncoderReset() {

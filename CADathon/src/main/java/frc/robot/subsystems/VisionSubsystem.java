@@ -79,9 +79,7 @@ public class VisionSubsystem extends SubsystemBase {
     private double maxRotationDiff = Math.toRadians(10); // radians
 
     // Placeholder linear model for shooter if vision is unavailable
-    private double fallbackRPMPerMeter = 1000.0;
     private double fallbackRPMIntercept = 1500.0;
-    private double fallbackHoodPerMeter = 10.0;
     private double fallbackHoodIntercept = 5.0;
 
     // Limelight camera objects
@@ -278,6 +276,8 @@ public class VisionSubsystem extends SubsystemBase {
 
         Logger.recordOutput("HeroHeist/Vision/FR/Last FR-Data only Pose", lastFRPose);
         Logger.recordOutput("HeroHeist/Vision/FR/Last FR Confidence", lastFRConfidence);
+
+        Logger.recordOutput("HeroHeist/Vision/Faults/Drivetrain instance null?", drivetrain == null);
     }
 
     // -------------------------
@@ -338,18 +338,33 @@ public class VisionSubsystem extends SubsystemBase {
     public ShooterSettings recommendShooterForTarget(Pose2d target, ScoringLocation town) {
 
         lastTargetPose = target;
-        
+
         targetData targetData = getTargetData(town);
-        double dist = getDistanceToTarget(target);
+  
         double targetHeight = targetData.height;
         double targetAngle = targetData.angle;
         double distOffset = targetData.distanceOffset;
 
+        Pose2d tmp = target;
+
+        switch (town) {
+            case UPTOWN:
+                tmp = new Pose2d(new Translation2d(target.getX(), target.getY() + distOffset), new Rotation2d(0));
+                break;
+            
+            case DOWNTOWN:
+                tmp = new Pose2d(new Translation2d(target.getX(), target.getY() - distOffset), new Rotation2d(0));
+                break;
+            default:
+                break;
+        }
+        target = tmp;
+
+        double dist = getDistanceToTarget(target);
+
         if (!Double.isFinite(dist)) return new ShooterSettings(fallbackHoodIntercept, fallbackRPMIntercept);
         double hood = Math.atan(2 * (targetHeight - ShooterConstants.SHOOTER_HEIGHT)/dist - Math.tan(targetAngle));
         double rpm = 1/Math.cos(targetAngle) * Math.sqrt(9.81 * dist/ Math.abs(Math.tan(targetAngle) - Math.tan(hood)));
-        // double rpm = fallbackRPMPerMeter * dist + fallbackRPMIntercept;
-        // double hood = fallbackHoodPerMeter * dist + fallbackHoodIntercept;
 
         return new ShooterSettings(hood, rpm);
     }
@@ -366,9 +381,7 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public void setFallbackShooterLinear(double rpmPerMeter, double rpmIntercept, double hoodPerMeter, double hoodIntercept) {
-        this.fallbackRPMPerMeter = rpmPerMeter;
         this.fallbackRPMIntercept = rpmIntercept;
-        this.fallbackHoodPerMeter = hoodPerMeter;
         this.fallbackHoodIntercept = hoodIntercept;
     }
 

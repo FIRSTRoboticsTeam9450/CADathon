@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
@@ -45,7 +47,8 @@ public class CoordinationSubsystem extends SubsystemBase{
             applyState();
             hasStateChanged = false;
         }
-
+        
+        publishLogs();
     }
 
     private void applyState() {
@@ -128,6 +131,12 @@ public class CoordinationSubsystem extends SubsystemBase{
         
     }
 
+    private void publishLogs() {
+        Logger.recordOutput("HeroHesit/Coordination/Faults/Intake Instance null?", intakeInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/Faults/Transfer Instance null?", transferInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
+    }
+
     public void setState(AbsoluteStates wantedState) {
         currentState = wantedState;
         hasStateChanged = true;
@@ -135,6 +144,10 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public void setScoringLocation(ScoringLocation location) {
         wantedScoringLocation = location;
+    }
+
+    public ScoringLocation getScoringLocation() {
+        return wantedScoringLocation;
     }
 
     public static CoordinationSubsystem getInstance() {

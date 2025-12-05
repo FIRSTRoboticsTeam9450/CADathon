@@ -168,7 +168,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
   private boolean zeroEncoder() {
-    motorAngle.setVoltage(-1);
+    motorAngle.setVoltage(-0.04);
     if (Math.abs(motorAngle.getVelocity().getValueAsDouble()) < 0.1) {
       motorAngle.setPosition(0);
       motorAngle.setVoltage(0);
@@ -181,8 +181,8 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (!isZeroingDone) {
-      // currentAngleState = AngleState.STORING;
-      // isZeroingDone = zeroEncoder();
+      currentAngleState = AngleState.STORING;
+      isZeroingDone = zeroEncoder();
     }
     applyState();
   }

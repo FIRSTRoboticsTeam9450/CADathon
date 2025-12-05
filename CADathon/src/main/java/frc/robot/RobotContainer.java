@@ -16,6 +16,7 @@ import frc.robot.subsystems.CoordinationSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
+import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
 import frc.robot.util.BezierCurve;
 
 /**
@@ -84,15 +85,59 @@ public class RobotContainer {
             )
         );
 
+    DRIVER.leftTrigger()
+          .onTrue(
+            coordSub.setStateCommand(AbsoluteStates.INTAKING_SPEECH)
+          ).onFalse(
+            coordSub.setStateCommand(AbsoluteStates.STORING)
+          );
+    DRIVER.rightTrigger()
+          .onTrue(
+            coordSub.setStateCommand(AbsoluteStates.SHOOTING_SPEECH)
+          ).onFalse(
+            coordSub.setStateCommand(AbsoluteStates.STORING)
+          );
+    
+    DRIVER.leftBumper()
+          .onTrue(
+            coordSub.setStateCommand(AbsoluteStates.INTAKING_STORY)
+          ).onFalse(
+            coordSub.setStateCommand(AbsoluteStates.STORING)
+          );
+    DRIVER.rightBumper()
+          .onTrue(
+            coordSub.setStateCommand(AbsoluteStates.SHOOT_STORY)
+          ).onFalse(
+            coordSub.setStateCommand(AbsoluteStates.STORING)
+          );
+
+    DRIVER.y()
+          .onTrue(
+            coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_HIGH)
+          );
+    DRIVER.b()
+          .onTrue(
+            coordSub.setScoringLocationCommand(ScoringLocation.UPTOWN)
+          );
+    DRIVER.x()
+          .onTrue(
+            coordSub.setScoringLocationCommand(ScoringLocation.DOWNTOWN)
+          );
+    DRIVER.a()
+          .onTrue(
+            coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
+          );
+
+
     DRIVER.povUp()
           .whileTrue(
-            new InstantCommand(() -> coordSub.setState(AbsoluteStates.SHOOTER_OVERRIDE))
+           coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
             .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
           );
 
     DRIVER.povDown()
           .whileTrue(
-            new InstantCommand(() -> coordSub.setState(AbsoluteStates.SHOOTER_OVERRIDE))
+            coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
             .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
           );
 

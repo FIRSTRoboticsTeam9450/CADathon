@@ -43,6 +43,7 @@ public class TransferSubsystem extends SubsystemBase {
   private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
 
   private boolean hasStateChanged;
+  private boolean detectedSpeech;
 
   public TransferSubsystem() {
 
@@ -116,6 +117,7 @@ public class TransferSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
+    detectedSpeech = canrange.getIsDetected().getValue();
 
     if (hasStateChanged) {
       applyStates();
@@ -143,6 +145,10 @@ public class TransferSubsystem extends SubsystemBase {
 
   public transferStates getCurrentState() {
     return currentState;
+  }
+
+  public boolean getCANRangeTriggered() {
+    return detectedSpeech;
   }
 
   public static TransferSubsystem getInstance() {

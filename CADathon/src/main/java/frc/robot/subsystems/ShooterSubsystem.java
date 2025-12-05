@@ -55,14 +55,21 @@ public class ShooterSubsystem extends SubsystemBase {
   private final double mmJerk = 400;
 
   // Feedforward and PIDF constants
-  private final double mmKS = 0;
-  private final double mmKV = 0.33;
-  private final double mmKA = 0.05;
-  private final double mmKP = 90;
-  private final double mmKI = 0.001;
-  private final double mmKD = 0.35;
-  private final double mmKG = 0.001;
-  private final DynamicMotionMagicVoltage mmRequest;
+  private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0);
+  private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kV", 0.33);
+  private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kA", 0.05);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 0.01);
+  private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kI", 0);
+  private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kD", 0);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kG", 0.05);
+  private double mmKS = logMMKS.get();
+  private double mmKV = logMMKV.get();
+  private double mmKA = logMMKA.get();
+  private double mmKP = logMMKP.get();
+  private double mmKI = logMMKI.get();
+  private double mmKD = logMMKD.get();
+  private double mmKG = logMMKG.get();
+  private DynamicMotionMagicVoltage mmRequest;
 
   private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
   private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.12);
@@ -149,6 +156,21 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2; //Set this to however many rotations the motor encoder reads when the hood is just about to run off the gears.
+
+    motorAngle.getConfigurator().apply(motorConfig);
+  }
+
+  private void updateShooterAngleConstants() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
+    Slot0Configs slot0Config = new Slot0Configs().withKS(mmKS)
+                                                 .withKV(mmKV)
+                                                 .withKA(mmKA)
+                                                 .withKP(mmKP)
+                                                 .withKI(mmKI)
+                                                 .withKD(mmKD)
+                                                 .withKG(mmKG);
+    motorConfig.Slot0 = slot0Config;
 
     motorAngle.getConfigurator().apply(motorConfig);
   }
@@ -264,26 +286,57 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void updateShooterConstants() {
-    boolean updateVals = false;
+    boolean updateOuttakeVals = false;
+    boolean updateAngleVals = false;
 
-    double lKSVal = logVKS.get();
-    double lKVVal = logVKV.get();
-    double lKPVal = logVKP.get();
-    double lKFFVal = logVKFF.get();
+    double lVKSVal = logVKS.get();
+    double lVKVVal = logVKV.get();
+    double lVKPVal = logVKP.get();
+    double lVKFFVal = logVKFF.get();
 
-    updateVals = (vKS != lKSVal)
-              || (vKV != lKVVal)
-              || (vKP != lKPVal)
-              || (vKFF != lKFFVal);
+    updateOuttakeVals = (vKS != lVKSVal)
+                     || (vKV != lVKVVal)
+                     || (vKP != lVKPVal)
+                     || (vKFF != lVKFFVal);
 
-    if (updateVals) {
-      vKS = lKSVal;
-      vKV = lKVVal;
-      vKP = lKPVal;
-      vKFF = lKFFVal;
+    if (updateOuttakeVals) {
+      vKS = lVKSVal;
+      vKV = lVKVVal;
+      vKP = lVKPVal;
+      vKFF = lVKFFVal;
       updateShooterVelocityConstants();
     }
+
+    double lMMKSVal = logMMKS.get();
+    double lMMKVVal = logMMKV.get();
+    double lMMKAVal = logMMKA.get();
+    double lMMKPVal = logMMKP.get();
+    double lMMKIVal = logMMKI.get();
+    double lMMKDVal = logMMKD.get();
+    double lMMKGVal = logMMKG.get();
+
+    updateAngleVals = (mmKS != lMMKSVal)
+                   || (mmKV != lMMKVVal)
+                   || (mmKA != lMMKAVal)
+                   || (mmKP != lMMKPVal)
+                   || (mmKI != lMMKIVal)
+                   || (mmKD != lMMKDVal)
+                   || (mmKG != lMMKGVal);
+
+    if (updateAngleVals) {
+      mmKS = lMMKSVal;
+      mmKV = lMMKVVal;
+      mmKA = lMMKAVal;
+      mmKP = lMMKPVal;
+      mmKI = lMMKIVal;
+      mmKD = lMMKDVal;
+      mmKG = lMMKGVal;
+
+      updateShooterAngleConstants();
+    }
+    
   }
+
 
   /* --------------- Getters -------------- */
 

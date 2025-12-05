@@ -333,7 +333,7 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Provides shooter hood angle and wheel RPM recommendations based on distance.
      * Uses fallback linear model if vision unavailable.
-     * REPLACE WITH CALCULATIONS ON WHITEBOARD WHEN CAN GET THEM
+     * 
      */
     public ShooterSettings recommendShooterForTarget(Pose2d target, ScoringLocation town) {
 

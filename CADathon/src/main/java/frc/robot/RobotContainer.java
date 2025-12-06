@@ -128,6 +128,10 @@ public class RobotContainer {
             coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
           );
 
+    DRIVER.back()
+          .onTrue(
+            coordSub.zeroEncoders()
+          );
 
     DRIVER.povUp()
           .whileTrue(

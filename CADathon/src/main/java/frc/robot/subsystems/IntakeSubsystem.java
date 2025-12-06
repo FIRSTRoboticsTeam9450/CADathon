@@ -11,6 +11,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
@@ -142,7 +143,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  public boolean isEncoderReset() {
+  private boolean isEncoderReset() {
     if(Math.abs(motorPivot.getVelocity().getValueAsDouble()) < .1) {
       motorPivot.setPosition(0);
       motorPivot.setVoltage(0);
@@ -150,6 +151,12 @@ public class IntakeSubsystem extends SubsystemBase {
       return true;
     }
     return false;
+  }
+
+  public void zeroEncoder() {
+    if (DriverStation.isDisabled()) {
+      motorPivot.setPosition(0);
+    }
   }
 
   /*** ____________________________________ SETTERS ____________________________________ ***/

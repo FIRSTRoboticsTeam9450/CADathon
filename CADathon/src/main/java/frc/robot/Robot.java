@@ -10,7 +10,9 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.CoordinationSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -22,6 +24,7 @@ public class Robot extends LoggedRobot {
 
   private final RobotContainer m_robotContainer;
   private final ShooterSubsystem shooterSub = ShooterSubsystem.getInstance();
+  private final CoordinationSubsystem coordSub = CoordinationSubsystem.getInstance();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -54,7 +57,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    coordSub.setState(AbsoluteStates.STORING);
+  }
 
   @Override
   public void disabledPeriodic() {

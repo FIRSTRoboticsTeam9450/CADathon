@@ -330,6 +330,11 @@ public class VisionSubsystem extends SubsystemBase {
         return new Transform2d(translationRobotFrame, rotationRobotToTarget);
     }
 
+
+    public Pose2d getTargetPose() {
+        return lastTargetPose;
+    }
+
     /**
      * Provides shooter hood angle and wheel RPM recommendations based on distance.
      * Uses fallback linear model if vision unavailable.
@@ -345,20 +350,20 @@ public class VisionSubsystem extends SubsystemBase {
         double targetAngle = targetData.angle;
         double distOffset = targetData.distanceOffset;
 
-        Pose2d tmp = target;
+        Pose2d modifiedTargetPose = target;
 
         switch (town) {
             case UPTOWN:
-                tmp = new Pose2d(new Translation2d(target.getX(), target.getY() + distOffset), new Rotation2d(0));
+                modifiedTargetPose = new Pose2d(new Translation2d(target.getX(), target.getY() + distOffset), new Rotation2d(0));
                 break;
             
             case DOWNTOWN:
-                tmp = new Pose2d(new Translation2d(target.getX(), target.getY() - distOffset), new Rotation2d(0));
+                modifiedTargetPose = new Pose2d(new Translation2d(target.getX(), target.getY() - distOffset), new Rotation2d(0));
                 break;
             default:
                 break;
         }
-        target = tmp;
+        target = modifiedTargetPose;
 
         double dist = getDistanceToTarget(target);
 

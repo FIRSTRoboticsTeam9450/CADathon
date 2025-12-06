@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
@@ -17,6 +18,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
@@ -337,6 +339,11 @@ public class ShooterSubsystem extends SubsystemBase {
     
   }
 
+  public void forceHoodZero() {
+    if (DriverStation.isDisabled()) {
+      motorAngle.setPosition(0);
+    }
+  }
 
   /* --------------- Getters -------------- */
 

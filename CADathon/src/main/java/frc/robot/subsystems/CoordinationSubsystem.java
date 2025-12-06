@@ -165,6 +165,11 @@ public class CoordinationSubsystem extends SubsystemBase{
         return new InstantCommand(() -> setScoringLocation(location));
     }
 
+    public Command zeroEncoders() {
+        return new InstantCommand(() -> intakeInstance.zeroEncoder())
+                        .alongWith(new InstantCommand(() -> shooterInstance.forceHoodZero()));
+    }
+
     public ScoringLocation getScoringLocation() {
         return wantedScoringLocation;
     }

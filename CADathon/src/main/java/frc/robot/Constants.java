@@ -37,7 +37,7 @@ public final class Constants {
         public static final double LOCATION_Z = 0.235890271781; //Offset from ground, 9.287 inches
         public static final double PITCH = 0;
         public static final double ROLL = 0;
-        public static final double YAW = 37.5; //Angle pointing leftward, will need to be fixed depending on how the limelight ui deals with YAW
+        public static final double YAW = -37.5; 
       }
 
       public static class FrontRight {
@@ -47,7 +47,7 @@ public final class Constants {
         public static final double LOCATION_Z = 0.235890271781; //Offset from ground, 9.287 inches
         public static final double PITCH = 0;
         public static final double ROLL = 0;
-        public static final double YAW = 37.5; //Angle pointing rightward, will need to be fixed depending on how the limelight ui deals with YAW
+        public static final double YAW = 37.5; 
       }
 
     }

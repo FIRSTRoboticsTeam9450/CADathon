@@ -11,6 +11,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
@@ -56,7 +57,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates targetState = intakeStates.NOT_RUNNING;
 
   private boolean resetDone = false;
-  private boolean updatedPos = true;
   private double setpoint;
 
   public IntakeSubsystem() {
@@ -141,10 +141,9 @@ public class IntakeSubsystem extends SubsystemBase {
       setSetpoint(getPosition(intakePos.STORE));
       currentPos = intakePos.STORE;
     }
-    updatedPos = true;
   }
 
-  public boolean isEncoderReset() {
+  private boolean isEncoderReset() {
     if(Math.abs(motorPivot.getVelocity().getValueAsDouble()) < .1) {
       motorPivot.setPosition(0);
       motorPivot.setVoltage(0);
@@ -152,6 +151,12 @@ public class IntakeSubsystem extends SubsystemBase {
       return true;
     }
     return false;
+  }
+
+  public void zeroEncoder() {
+    if (DriverStation.isDisabled()) {
+      motorPivot.setPosition(0);
+    }
   }
 
   /*** ____________________________________ SETTERS ____________________________________ ***/
@@ -187,9 +192,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getIntakeVoltage(intakeStates state) {
     switch (state) {
       case INTAKING:
-        return 6;
+        return 4;
       case OUTTAKING:
-        return -6;
+        return -4;
       case NOT_RUNNING:
         return 0;
       default:

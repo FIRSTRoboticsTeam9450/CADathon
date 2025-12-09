@@ -5,16 +5,19 @@
 package frc.robot.subsystems;
 
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.StrictFollower;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
@@ -42,28 +45,45 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorAngle = new TalonFX(ShooterConstants.ANGLE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
 
-  private PIDController velocityPID = new PIDController(5, 0, 0);
-  private double velocitySetpoint = 0;
   private boolean wheelsSpunUp = false;
-  private double shooterPower = 0;
 
   private double angleSetpoint = 0;
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private double mmVelocity = 2;
-  private double mmAcceleration = 1;
-  private double mmJerk = 400;
+  private final double mmVelocity = 2;
+  private final double mmAcceleration = 1;
+  private final double mmJerk = 400;
 
   // Feedforward and PIDF constants
-  private double kS = 0;
-  private double kV = 0.33;
-  private double kA = 0.05;
-  private double kP = 90;
-  private double kI = 0.001;
-  private double kD = 0.35;
-  private double kG = 0.001;
-  private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
+  private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0);
+  private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kV", 0.33);
+  private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kA", 0.05);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 0.01);
+  private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kI", 0);
+  private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kD", 0);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kG", 0.05);
+  private double mmKS = logMMKS.get();
+  private double mmKV = logMMKV.get();
+  private double mmKA = logMMKA.get();
+  private double mmKP = logMMKP.get();
+  private double mmKI = logMMKI.get();
+  private double mmKD = logMMKD.get();
+  private double mmKG = logMMKG.get();
+  private DynamicMotionMagicVoltage mmRequest;
+
+  private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
+  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.12);
+  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.11);
+  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0.5);
+  private double vKS = logVKS.get();
+  private double vKV = logVKV.get();
+  private double vKP = logVKP.get();
+  private double vKFF = logVKFF.get();
+  private final int vSlot = 0;
+  private final VelocityVoltage vRequest;
+  private double velocitySetpoint = 0;
+
 
   private final double maxdHoodVoltage;
 
@@ -73,6 +93,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     configureShooterMotors();
     configureAngleMotor();
+
+    mmRequest = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
+    vRequest = new VelocityVoltage(0).withSlot(vSlot);
 
     maxdHoodVoltage = 0.15;
     
@@ -94,6 +117,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     motorConfig.Feedback.SensorToMechanismRatio = 9/8; //1.125
 
+    Slot0Configs slot0Config = new Slot0Configs().withKS(vKS)
+                                                 .withKV(vKV)
+                                                 .withKP(vKP);
+
+    motorConfig.Slot0 = slot0Config;
+
     motorWheelFront.getConfigurator().apply(motorConfig);
     motorWheelBack.getConfigurator().apply(motorConfig);
 
@@ -112,13 +141,13 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.SupplyCurrentLimit = 10;
     motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
 
-    Slot0Configs slot0Config = new Slot0Configs().withKS(kS)
-                                                 .withKV(kV)
-                                                 .withKA(kA)
-                                                 .withKP(kP)
-                                                 .withKI(kI)
-                                                 .withKD(kD)
-                                                 .withKG(kG);
+    Slot0Configs slot0Config = new Slot0Configs().withKS(mmKS)
+                                                 .withKV(mmKV)
+                                                 .withKA(mmKA)
+                                                 .withKP(mmKP)
+                                                 .withKI(mmKI)
+                                                 .withKD(mmKD)
+                                                 .withKG(mmKG);
 
     motorConfig.Slot0 = slot0Config;
 
@@ -126,7 +155,38 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = mmVelocity;
     motorConfig.MotionMagic.MotionMagicJerk = mmJerk;
 
+    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2; //Set this to however many rotations the motor encoder reads when the hood is just about to run off the gears.
+
     motorAngle.getConfigurator().apply(motorConfig);
+  }
+
+  private void updateShooterAngleConstants() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
+    Slot0Configs slot0Config = new Slot0Configs().withKS(mmKS)
+                                                 .withKV(mmKV)
+                                                 .withKA(mmKA)
+                                                 .withKP(mmKP)
+                                                 .withKI(mmKI)
+                                                 .withKD(mmKD)
+                                                 .withKG(mmKG);
+    motorConfig.Slot0 = slot0Config;
+
+    motorAngle.getConfigurator().apply(motorConfig);
+  }
+
+  private void updateShooterVelocityConstants() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
+    Slot0Configs slot0Config = new Slot0Configs().withKS(vKS)
+                                                 .withKV(vKV)
+                                                 .withKP(vKP);
+
+    motorConfig.Slot0 = slot0Config;
+
+    motorWheelFront.getConfigurator().apply(motorConfig);
+    motorWheelBack.getConfigurator().apply(motorConfig);
   }
 
 
@@ -144,8 +204,8 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (!isZeroingDone) {
-      // currentAngleState = AngleState.STORING;
-      // isZeroingDone = zeroEncoder();
+      currentAngleState = AngleState.STORING;
+      isZeroingDone = zeroEncoder();
     }
     applyState();
   }
@@ -153,8 +213,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private void applyState() {
     switch (currentShooterState) {
       case SHOOTING:
-        shooterPower = velocityPID.calculate(motorWheelFront.getVelocity().getValueAsDouble());
-        motorWheelFront.setVoltage(shooterPower);
+        motorWheelFront.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
 
         wheelsSpunUp = rpmWithinTolerance();
         break;
@@ -171,15 +230,15 @@ public class ShooterSubsystem extends SubsystemBase {
 
       case STORING:
         setShooterAngleSetpoint(0);
-        motorAngle.setControl(request.withPosition(0));
+        motorAngle.setControl(mmRequest.withPosition(0));
         break;
 
       case IDLING:
-        motorAngle.setControl(request.withPosition(motorAngle.getPosition().getValueAsDouble()));
+        motorAngle.setControl(mmRequest.withPosition(motorAngle.getPosition().getValueAsDouble()));
         break;
 
       case AIMING:
-        motorAngle.setControl(request.withPosition(angleSetpoint));
+        motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
         break;
     }
   }
@@ -206,11 +265,7 @@ public class ShooterSubsystem extends SubsystemBase {
   /* --------------- Setters --------------- */
 
   public void setVelocitySetpoint(double setpoint) {
-    velocityPID.setSetpoint(setpoint);
     velocitySetpoint = setpoint;
-  }
-  public void setShooterPower(double shooterPower) {
-    this.shooterPower = shooterPower;
   }
 
   public void setShooterAngleSetpoint(double setpoint) {
@@ -229,6 +284,64 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setAngleVoltage(double voltage) {
     voltage = MathUtil.clamp(voltage, -maxdHoodVoltage, maxdHoodVoltage);
     angleVoltage = voltage;
+  }
+
+  public void updateShooterConstants() {
+    boolean updateOuttakeVals = false;
+    boolean updateAngleVals = false;
+
+    double lVKSVal = logVKS.get();
+    double lVKVVal = logVKV.get();
+    double lVKPVal = logVKP.get();
+    double lVKFFVal = logVKFF.get();
+
+    updateOuttakeVals = (vKS != lVKSVal)
+                     || (vKV != lVKVVal)
+                     || (vKP != lVKPVal)
+                     || (vKFF != lVKFFVal);
+
+    if (updateOuttakeVals) {
+      vKS = lVKSVal;
+      vKV = lVKVVal;
+      vKP = lVKPVal;
+      vKFF = lVKFFVal;
+      updateShooterVelocityConstants();
+    }
+
+    double lMMKSVal = logMMKS.get();
+    double lMMKVVal = logMMKV.get();
+    double lMMKAVal = logMMKA.get();
+    double lMMKPVal = logMMKP.get();
+    double lMMKIVal = logMMKI.get();
+    double lMMKDVal = logMMKD.get();
+    double lMMKGVal = logMMKG.get();
+
+    updateAngleVals = (mmKS != lMMKSVal)
+                   || (mmKV != lMMKVVal)
+                   || (mmKA != lMMKAVal)
+                   || (mmKP != lMMKPVal)
+                   || (mmKI != lMMKIVal)
+                   || (mmKD != lMMKDVal)
+                   || (mmKG != lMMKGVal);
+
+    if (updateAngleVals) {
+      mmKS = lMMKSVal;
+      mmKV = lMMKVVal;
+      mmKA = lMMKAVal;
+      mmKP = lMMKPVal;
+      mmKI = lMMKIVal;
+      mmKD = lMMKDVal;
+      mmKG = lMMKGVal;
+
+      updateShooterAngleConstants();
+    }
+    
+  }
+
+  public void forceHoodZero() {
+    if (DriverStation.isDisabled()) {
+      motorAngle.setPosition(0);
+    }
   }
 
   /* --------------- Getters -------------- */

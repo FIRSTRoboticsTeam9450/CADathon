@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
@@ -14,6 +18,7 @@ public class CoordinationSubsystem extends SubsystemBase{
     private IntakeSubsystem intakeInstance = IntakeSubsystem.getInstance();
     private TransferSubsystem transferInstance = TransferSubsystem.getInstance();
     private ShooterSubsystem shooterInstance = ShooterSubsystem.getInstance();
+    private VisionSubsystem visionInstance = VisionSubsystem.getInstance();
 
     public enum AbsoluteStates {
         SHOOTER_OVERRIDE,
@@ -45,7 +50,8 @@ public class CoordinationSubsystem extends SubsystemBase{
             applyState();
             hasStateChanged = false;
         }
-
+        
+        publishLogs();
     }
 
     private void applyState() {
@@ -86,11 +92,19 @@ public class CoordinationSubsystem extends SubsystemBase{
                 break;
             
             case PREPARING_FOR_SHOT:
-                transferState = transferStates.PREPARING_FOR_SHOT;
-                intakeState = intakePos.STORE;
-                intaking = intakeStates.NOT_RUNNING;
-                shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.AIMING;
+                if (!transferInstance.getCANRangeTriggered()) {
+                    transferState = transferStates.PREPARING_FOR_SHOT;
+                    intakeState = intakePos.STORE;
+                    intaking = intakeStates.NOT_RUNNING;
+                    shooterState = ShooterState.SHOOTING;
+                    shooterAngleState = AngleState.AIMING;
+                } else {
+                    transferState = transferStates.STORING;
+                    intakeState = intakePos.STORE;
+                    intaking = intakeStates.NOT_RUNNING;
+                    shooterState = ShooterState.SHOOTING;
+                    shooterAngleState = AngleState.AIMING;
+                }
                 break;
 
             case SHOOTING_SPEECH:
@@ -128,13 +142,36 @@ public class CoordinationSubsystem extends SubsystemBase{
         
     }
 
+    private void publishLogs() {
+        Logger.recordOutput("HeroHesit/Coordination/Faults/Intake Instance null?", intakeInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/Faults/Transfer Instance null?", transferInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
+    }
+
     public void setState(AbsoluteStates wantedState) {
         currentState = wantedState;
         hasStateChanged = true;
     }
 
+    public Command setStateCommand(AbsoluteStates wantedState) {
+        return new InstantCommand(() -> setState(wantedState));
+    }
+
     public void setScoringLocation(ScoringLocation location) {
         wantedScoringLocation = location;
+    }
+
+    public Command setScoringLocationCommand(ScoringLocation location) {
+        return new InstantCommand(() -> setScoringLocation(location));
+    }
+
+    public Command zeroEncoders() {
+        return new InstantCommand(() -> intakeInstance.zeroEncoder())
+                        .alongWith(new InstantCommand(() -> shooterInstance.forceHoodZero()));
+    }
+
+    public ScoringLocation getScoringLocation() {
+        return wantedScoringLocation;
     }
 
     public static CoordinationSubsystem getInstance() {

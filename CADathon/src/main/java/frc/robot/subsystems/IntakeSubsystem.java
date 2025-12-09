@@ -192,9 +192,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getIntakeVoltage(intakeStates state) {
     switch (state) {
       case INTAKING:
-        return 6;
+        return 4;
       case OUTTAKING:
-        return -6;
+        return -4;
       case NOT_RUNNING:
         return 0;
       default:

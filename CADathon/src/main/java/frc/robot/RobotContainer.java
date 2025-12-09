@@ -28,6 +28,7 @@ import frc.robot.util.BezierCurve;
 public class RobotContainer {
 
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  @SuppressWarnings("unused")
   private final VisionSubsystem vision;
   private final CoordinationSubsystem coordSub;
   private final ShooterSubsystem shooterSub;

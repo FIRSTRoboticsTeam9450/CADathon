@@ -58,19 +58,20 @@ public class TransferSubsystem extends SubsystemBase {
 
   private void configureMap() {
 
+    /* --------------- Hop - Tow ---- */
     double[] tmpArr = {0.0, 0.0};
     stateVoltageMap.put(transferStates.STORING, tmpArr);
 
     tmpArr[0] = 4.0;
-    tmpArr[1] = -2;
+    tmpArr[1] = 2;
     stateVoltageMap.put(transferStates.INTAKING, tmpArr);
 
     tmpArr[0] = 4.0;
     tmpArr[1] = 2.0;
     stateVoltageMap.put(transferStates.PREPARING_FOR_SHOT, tmpArr);
 
-    tmpArr[0] = 8;
-    tmpArr[1] = 8;
+    tmpArr[0] = 4;
+    tmpArr[1] = 4;
     stateVoltageMap.put(transferStates.FEEDING, tmpArr);
 
     tmpArr[0] = -6;

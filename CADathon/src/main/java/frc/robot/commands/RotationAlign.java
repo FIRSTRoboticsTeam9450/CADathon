@@ -69,7 +69,7 @@ public class RotationAlign extends Command{
         double yDiff = target.getY() - currentPose.getY();
         double rotationTarget = Math.atan(yDiff / xDiff);
 
-        if(currentPose.getX() > 4) { // Change this number later
+        if(currentPose.getX() > target.getX()) {
             rotationTarget += Math.PI;
         }
 

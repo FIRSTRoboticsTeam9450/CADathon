@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
@@ -35,18 +37,19 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
-  private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS); // Good voltage is around 1.5V
 
-  private double velocity = 2;
-  private double acceleration = 100;
+  private double velocity = 9;
+  private double acceleration = 11;
   private double jerk = 1000;
-  private double kS = 0.6; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
-  private double kV = 0.26; // A velocity target of 1 rps results in 0.12 V output .12
-  private double kA = 0.017; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
-  private double kP = 3; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
+  private double kS = 0; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
+  private double kV = 0; // A velocity target of 1 rps results in 0.12 V output .12
+  private double kA = 0; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
+  private double kP = 7; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
   private double kI = 0; // no output for integrated error 0
-  private double kD = 0.12; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
-  private double kG = 0.45;
+  private double kD = 0; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
+  private double kG = 0;
+  
   private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
   private intakePos currentPos = intakePos.ZERO;
@@ -62,7 +65,8 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
     configIntakeMotor();
     configIntakePivot();
-    motorPivot.setVoltage(-1);
+    motorPivot.setPosition(0);
+    System.out.println("SET POS TO 0");
   }
   
   public void configIntakeMotor() {
@@ -86,7 +90,7 @@ public class IntakeSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
@@ -109,9 +113,13 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // Zero encoder
-    if(!resetDone) {
-      resetDone = isEncoderReset();
-    }
+    // if(!resetDone) {
+    //   resetDone = isEncoderReset();
+    // }
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/TargetPos", targetPos);
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/MotorPos", motorPivot.getPosition().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/setpoint", setpoint);
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/velocity", motorPivot.getVelocity().getValueAsDouble());
     if(targetPos != currentPos) {
       goToPos();
     }
@@ -179,7 +187,7 @@ public class IntakeSubsystem extends SubsystemBase {
       case STORE:
         return 0;
       case SPEECH_BUBBLES_INTAKE:
-        return 0;
+        return 2.81;
       case STORY_BOARDS_INTAKE:
         return 0;
       case STORY_BOARDS_SCORE:

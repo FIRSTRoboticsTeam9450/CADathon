@@ -13,10 +13,15 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoordinationSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.TransferSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
+import frc.robot.subsystems.IntakeSubsystem.intakePos;
+import frc.robot.subsystems.IntakeSubsystem.intakeStates;
+import frc.robot.subsystems.TransferSubsystem.transferStates;
 import frc.robot.util.BezierCurve;
 
 /**
@@ -32,7 +37,8 @@ public class RobotContainer {
   private final VisionSubsystem vision;
   private final CoordinationSubsystem coordSub;
   private final ShooterSubsystem shooterSub;
-
+  private final IntakeSubsystem intakeSub;
+  private final TransferSubsystem transferSub;
   public static double pigeonOffset = 0;
 
   public BezierCurve driveBezier = new BezierCurve("drive", 117.4, 0.054, 91.4, 0.76, 0.1, 0.01);
@@ -57,11 +63,12 @@ public class RobotContainer {
    *  The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-
+    System.out.println(drivetrain + " I PUT DRIVE TRAIN IN");
     vision = VisionSubsystem.getInstance(drivetrain);
     coordSub = CoordinationSubsystem.getInstance();
     shooterSub = ShooterSubsystem.getInstance();
-
+    intakeSub = IntakeSubsystem.getInstance();
+    transferSub = TransferSubsystem.getInstance();
     // Configure the trigger bindings
     configureBindings();
   }
@@ -112,22 +119,23 @@ public class RobotContainer {
             coordSub.setStateCommand(AbsoluteStates.STORING)
           );
 
-    DRIVER.y()
-          .onTrue(
-            coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_HIGH)
-          );
-    DRIVER.b()
-          .onTrue(
-            coordSub.setScoringLocationCommand(ScoringLocation.UPTOWN)
-          );
-    DRIVER.x()
-          .onTrue(
-            coordSub.setScoringLocationCommand(ScoringLocation.DOWNTOWN)
-          );
-    DRIVER.a()
-          .onTrue(
-            coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
-          );
+    // DRIVER.y()
+    //       .onTrue(
+    //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_HIGH)
+    //       );
+    // DRIVER.b()
+    //       .onTrue(
+    //         coordSub.setScoringLocationCommand(ScoringLocation.UPTOWN)
+    //       );
+    // DRIVER.x()
+    //       .onTrue(
+    //         coordSub.setScoringLocationCommand(ScoringLocation.DOWNTOWN)
+    //       );
+    // DRIVER.a()
+    //       .onTrue(
+    //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
+    //       );
+    DRIVER.y().onTrue(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.NOT_RUNNING)).andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.INTAKING))));
 
     DRIVER.back()
           .onTrue(

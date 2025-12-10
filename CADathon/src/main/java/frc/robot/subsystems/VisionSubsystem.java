@@ -14,7 +14,7 @@ import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
 import frc.robot.Constants.RobotConstants.TargetConstants;
 import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
-
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightObject;
 import frc.robot.util.LimelightObject.Location;
@@ -107,7 +107,7 @@ public class VisionSubsystem extends SubsystemBase {
         configureLimelights();
 
         // Initialize drivetrain vision standard deviations
-        drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
+        //drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
     }
 
     /**
@@ -157,35 +157,35 @@ public class VisionSubsystem extends SubsystemBase {
      */
     private void updateVision() {
         // Get robot yaw from drivetrain's Pigeon2 sensor, applying offset
-        double robotYaw = drivetrain.getPigeon2().getYaw().getValueAsDouble() - RobotContainer.pigeonOffset;
+        // double robotYaw = drivetrain.getPigeon2().getYaw().getValueAsDouble() - RobotContainer.pigeonOffset;
 
-        // Update each Limelight with current robot yaw
-        LimelightHelpers.SetRobotOrientation(limelightFL.getName(), robotYaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate peFL = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFL.getName());
-        lastFLPose = peFL.pose;
+        // // Update each Limelight with current robot yaw
+        // LimelightHelpers.SetRobotOrientation(limelightFL.getName(), robotYaw, 0, 0, 0, 0, 0);
+        // LimelightHelpers.PoseEstimate peFL = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFL.getName());
+        // lastFLPose = peFL.pose;
 
-        LimelightHelpers.SetRobotOrientation(limelightFR.getName(), robotYaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate peFR = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFR.getName());
-        lastFRPose = peFR.pose;
+        // LimelightHelpers.SetRobotOrientation(limelightFR.getName(), robotYaw, 0, 0, 0, 0, 0);
+        // LimelightHelpers.PoseEstimate peFR = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFR.getName());
+        // lastFRPose = peFR.pose;
 
-        // Convert raw Limelight data into VisionMeasurement objects
-        VisionMeasurement vmFL = createVisionMeasurement(peFL, limelightFL.getName());
-        VisionMeasurement vmFR = createVisionMeasurement(peFR, limelightFR.getName());
+        // // Convert raw Limelight data into VisionMeasurement objects
+        // VisionMeasurement vmFL = createVisionMeasurement(peFL, limelightFL.getName());
+        // VisionMeasurement vmFR = createVisionMeasurement(peFR, limelightFR.getName());
 
-        // Update logging confidence values
-        lastFLConfidence = vmFL.confidence;
-        lastFRConfidence = vmFR.confidence;
+        // // Update logging confidence values
+        // lastFLConfidence = vmFL.confidence;
+        // lastFRConfidence = vmFR.confidence;
 
-        // Fuse camera measurements
-        Optional<Pose2d> fusedPose = fuseVision(vmFL, vmFR);
+        // // Fuse camera measurements
+        // Optional<Pose2d> fusedPose = fuseVision(vmFL, vmFR);
 
-        // If valid, update lastVisionPose and send to drivetrain
-        fusedPose.ifPresent(pose -> {
-            lastVisionPose = pose;
-            lastFusedPose = pose;
-            lastVisionTimestamp = Math.max(vmFL.timestamp, vmFR.timestamp);
-            drivetrain.addVisionMeasurement(pose, lastVisionTimestamp);
-        });
+        // // If valid, update lastVisionPose and send to drivetrain
+        // fusedPose.ifPresent(pose -> {
+        //     lastVisionPose = pose;
+        //     lastFusedPose = pose;
+        //     lastVisionTimestamp = Math.max(vmFL.timestamp, vmFR.timestamp);
+        //     drivetrain.addVisionMeasurement(pose, lastVisionTimestamp);
+        // });
     }
 
     /**
@@ -382,7 +382,7 @@ public class VisionSubsystem extends SubsystemBase {
         this.visionStdDevY = yMeters;
         this.visionStdDevTheta = thetaRadians;
 
-        drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
+        //drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
     }
 
     public void setFallbackShooterLinear(double rpmPerMeter, double rpmIntercept, double hoodPerMeter, double hoodIntercept) {

@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.HashMap;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
@@ -62,21 +64,28 @@ public class TransferSubsystem extends SubsystemBase {
     double[] tmpArr = {0.0, 0.0};
     stateVoltageMap.put(transferStates.STORING, tmpArr);
 
-    tmpArr[0] = 4.0;
-    tmpArr[1] = 2;
+    // tmpArr[0] = 4.0;
+    // tmpArr[1] = 2;
+    // stateVoltageMap.put(transferStates.INTAKING, tmpArr);
+    
+    tmpArr[0] = 3;
+    tmpArr[1] = 1;
     stateVoltageMap.put(transferStates.INTAKING, tmpArr);
 
-    tmpArr[0] = 4.0;
-    tmpArr[1] = 2.0;
+    // tmpArr[0] = 4.0;
+    // tmpArr[1] = 2.0;
     stateVoltageMap.put(transferStates.PREPARING_FOR_SHOT, tmpArr);
 
-    tmpArr[0] = 4;
-    tmpArr[1] = 4;
+    // tmpArr[0] = 4;
+    // tmpArr[1] = 4;
     stateVoltageMap.put(transferStates.FEEDING, tmpArr);
 
-    tmpArr[0] = -6;
-    tmpArr[1] = -6;
+    // tmpArr[0] = -6;
+    // tmpArr[1] = -6;
+    tmpArr[0] = 3;
+    tmpArr[1] = 1;
     stateVoltageMap.put(transferStates.REJECTING, tmpArr);
+
 
   }
 
@@ -86,7 +95,7 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
@@ -106,7 +115,7 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 80;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
@@ -118,6 +127,8 @@ public class TransferSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
+
+    Logger.recordOutput("HeroHeist/TransferSubsystem/CurrentState", currentState);
     detectedSpeech = canrange.getIsDetected().getValue();
 
     if (hasStateChanged) {
@@ -133,6 +144,9 @@ public class TransferSubsystem extends SubsystemBase {
     
     double hopperVoltage = voltageArr[0];
     double towerVoltage = voltageArr[1];
+    
+    Logger.recordOutput("HeroHeist/TransferSubsystem/hopperVoltage", hopperVoltage);
+    Logger.recordOutput("HeroHeist/TransferSubsystem/towerVoltage", towerVoltage);
 
     motorBottomRollers.setVoltage(hopperVoltage);
     motorSideRollers.setVoltage(hopperVoltage);

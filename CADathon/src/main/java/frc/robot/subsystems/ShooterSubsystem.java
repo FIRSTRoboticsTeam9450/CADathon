@@ -203,11 +203,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (!isZeroingDone) {
-      currentAngleState = AngleState.STORING;
-      isZeroingDone = zeroEncoder();
-    }
-    applyState();
+    // if (!isZeroingDone) {
+    //   currentAngleState = AngleState.STORING;
+    //   isZeroingDone = zeroEncoder();
+    // }
+    //applyState();
   }
 
   private void applyState() {

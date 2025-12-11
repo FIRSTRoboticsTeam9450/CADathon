@@ -42,8 +42,6 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     private ScoringLocation wantedScoringLocation = ScoringLocation.DOWNTOWN;
 
-    private boolean hasStateChanged = false;
-
     public CoordinationSubsystem() {
 
         applyState();
@@ -89,19 +87,16 @@ public class CoordinationSubsystem extends SubsystemBase{
                 break;
             
             case PREPARING_FOR_SHOT:
-                if (!transferInstance.getCANRangeTriggered()) {
                     transferState = transferStates.PREPARING_FOR_SHOT;
                     intakeState = intakePos.STORE;
                     intaking = intakeStates.NOT_RUNNING;
                     shooterState = ShooterState.SHOOTING;
                     shooterAngleState = AngleState.AIMING;
-                } else {
                     transferState = transferStates.STORING;
                     intakeState = intakePos.STORE;
                     intaking = intakeStates.NOT_RUNNING;
                     shooterState = ShooterState.SHOOTING;
                     shooterAngleState = AngleState.AIMING;
-                }
                 break;
 
             case SHOOTING_SPEECH:
@@ -147,7 +142,6 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public void setState(AbsoluteStates wantedState) {
         currentState = wantedState;
-        hasStateChanged = true;
     }
 
     public Command setStateCommand(AbsoluteStates wantedState) {

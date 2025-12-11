@@ -32,7 +32,7 @@ import frc.robot.util.BezierCurve;
  */
 public class RobotContainer {
 
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
   @SuppressWarnings("unused")
   private final VisionSubsystem vision;
   private final CoordinationSubsystem coordSub;
@@ -142,12 +142,12 @@ public class RobotContainer {
         new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
         .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
       );
-
-      DRIVER.b()
-      .onTrue(
-        new InstantCommand(() -> coordSub.setState(AbsoluteStates.INTAKING_SPEECH))
+    DRIVER.b().onTrue(
+      new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
+      .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING)))
       ).onFalse(
-        new InstantCommand(() -> coordSub.setState(AbsoluteStates.STORING))
+        new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
+        .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
       );
 
     DRIVER.povUp()

@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontLeft;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
@@ -64,7 +64,7 @@ public class VisionSubsystem extends SubsystemBase {
     // -------------------------
     // Core subsystem fields
     // -------------------------
-    private static CommandSwerveDrivetrain drivetrain; // Reference to drivetrain for pose updates
+    private static CommandSwerveDrivetrain drivetrain = RobotContainer.drivetrain; // Reference to drivetrain for pose updates
 
     private volatile Pose2d lastVisionPose = null;  // Last pose estimated from fused vision
     private volatile double lastVisionTimestamp = 0.0; // Timestamp of last vision update
@@ -107,7 +107,7 @@ public class VisionSubsystem extends SubsystemBase {
         configureLimelights();
 
         // Initialize drivetrain vision standard deviations
-        //drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
+        // drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
     }
 
     /**

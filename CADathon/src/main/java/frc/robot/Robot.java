@@ -71,8 +71,9 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     shooterSub.updateShooterConstants();
+    intakeSub.updateConstants();
 
-    if (DRIVER.back().getAsBoolean()) {
+    if (DRIVER.back().getAsBoolean() && DRIVER.start().getAsBoolean()) {
       shooterSub.forceHoodZero();
       intakeSub.zeroEncoder();
     }

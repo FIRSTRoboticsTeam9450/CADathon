@@ -43,13 +43,11 @@ public class TransferSubsystem extends SubsystemBase {
   private TalonFX motorBottomRollers = new TalonFX(TransferConstants.BOTTOM_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
 
-  private boolean hasStateChanged;
   private boolean detectedSpeech;
 
   public TransferSubsystem() {
     configureTower();
     configureHopper();
-    hasStateChanged = false;
   }
 
   private void configureTower() {
@@ -155,7 +153,6 @@ public class TransferSubsystem extends SubsystemBase {
 
   public void setWantedState(transferStates wantedState) {
     currentState = wantedState;
-    hasStateChanged = true;
   }
 
   public transferStates getCurrentState() {

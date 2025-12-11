@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -39,16 +40,29 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS); // Good voltage is around 1.5V
 
-  private double velocity = 9;
-  private double acceleration = 11;
-  private double jerk = 1000;
-  private double kS = 0; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
-  private double kV = 0; // A velocity target of 1 rps results in 0.12 V output .12
-  private double kA = 0; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
-  private double kP = 15; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
-  private double kI = 0; // no output for integrated error 0
-  private double kD = 0; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
-  private double kG = 0;
+  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 9);
+  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 11);
+  private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Jerk", 1000);
+
+  private double velocity = logMMVel.get();
+  private double acceleration = logMMAccl.get();
+  private double jerk = logMMJerk.get();
+
+  private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kS", 0);
+  private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kV", 0);
+  private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kA", 0);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 15);
+  private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kI", 0);
+  private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kD", 0);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0);
+
+  private double kS = logMMKS.get(); // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
+  private double kV = logMMKV.get(); // A velocity target of 1 rps results in 0.12 V output .12
+  private double kA = logMMKA.get(); // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
+  private double kP = logMMKP.get(); // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
+  private double kI = logMMKI.get(); // no output for integrated error 0
+  private double kD = logMMKD.get(); // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
+  private double kG = logMMKG.get();
   
   private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
@@ -63,10 +77,11 @@ public class IntakeSubsystem extends SubsystemBase {
   private double setpoint;
 
   public IntakeSubsystem() {
+
     configIntakeMotor();
     configIntakePivot();
     motorPivot.setPosition(0);
-    System.out.println("SET POS TO 0");
+
   }
   
   public void configIntakeMotor() {
@@ -115,6 +130,19 @@ public class IntakeSubsystem extends SubsystemBase {
 
     motorPivot.getConfigurator().apply(motorConfig);
   }
+
+  private void updatePivotConstants() {
+    TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
+    Slot0Configs slot0 = motorConfig.Slot0;
+    slot0.kS = kS; slot0.kV = kV; slot0.kA = kA;
+    slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
+    slot0.kG = kG;
+
+    motorConfig.Slot0 = slot0;
+
+    motorPivot.getConfigurator().apply(motorConfig);
+  }
   
   @Override
   public void periodic() {
@@ -122,10 +150,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // if(!resetDone) {
     //   resetDone = isEncoderReset();
     // }
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/TargetPos", targetPos);
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/MotorPos", motorPivot.getPosition().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/setpoint", setpoint);
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/velocity", motorPivot.getVelocity().getValueAsDouble());
+
     if(targetPos != currentPos) {
       goToPos();
     }
@@ -134,6 +159,15 @@ public class IntakeSubsystem extends SubsystemBase {
     }
     motorPivot.setControl(request.withPosition(setpoint));
     
+    publishLogs();
+
+  }
+
+  private void publishLogs() {
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/TargetPos", targetPos);
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/MotorPos", motorPivot.getPosition().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/setpoint", setpoint);
+    Logger.recordOutput("HeroHeist/IntakeSubsystem/velocity", motorPivot.getVelocity().getValueAsDouble());
   }
 
   public boolean atSetpoint() {
@@ -170,6 +204,51 @@ public class IntakeSubsystem extends SubsystemBase {
   public void zeroEncoder() {
     if (DriverStation.isDisabled()) {
       motorPivot.setPosition(0);
+    }
+  }
+
+  public void updateConstants() {
+    boolean updatePivotVals = false;
+    boolean updateMMRequest = false;
+
+    double lMMKSVal = logMMKS.get();
+    double lMMKVVal = logMMKV.get();
+    double lMMKAVal = logMMKA.get();
+    double lMMKPVal = logMMKP.get();
+    double lMMKIVal = logMMKI.get();
+    double lMMKDVal = logMMKD.get();
+    double lMMKGVal = logMMKG.get();
+
+    updatePivotVals = (kS != lMMKSVal)
+                   || (kV != lMMKVVal)
+                   || (kA != lMMKAVal)
+                   || (kP != lMMKPVal)
+                   || (kI != lMMKIVal)
+                   || (kD != lMMKDVal)
+                   || (kG != lMMKGVal);
+
+    if (updatePivotVals) {
+      kS = lMMKSVal;
+      kV = lMMKVVal;
+      kA = lMMKAVal;
+      kP = lMMKPVal;
+      kI = lMMKIVal;
+      kD = lMMKDVal;
+      kG = lMMKGVal;
+
+      updatePivotConstants();
+    }
+
+    updateMMRequest = (velocity != logMMVel.get()) 
+                   || (acceleration != logMMAccl.get()) 
+                   || (jerk != logMMJerk.get());
+
+    if (updateMMRequest) {
+      velocity = logMMVel.get();
+      acceleration = logMMAccl.get();
+      jerk = logMMJerk.get();
+
+      request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
     }
   }
 

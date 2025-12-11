@@ -45,7 +45,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private double kS = 0; // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
   private double kV = 0; // A velocity target of 1 rps results in 0.12 V output .12
   private double kA = 0; // An acceleration of 1 rps/s requires 0.01 V output .01 - Adds a little boost
-  private double kP = 7; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
+  private double kP = 15; // A position error of 2.5 rotations results in 12 V output 3.8 - Helps correct positional error
   private double kI = 0; // no output for integrated error 0
   private double kD = 0; // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
   private double kG = 0;
@@ -106,6 +106,12 @@ public class IntakeSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicAcceleration = acceleration;
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
     motorConfig.MotionMagic.MotionMagicJerk = jerk;
+
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 8.85;
 
     motorPivot.getConfigurator().apply(motorConfig);
   }
@@ -185,9 +191,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getPosition(intakePos pos) {
     switch (pos) {
       case STORE:
-        return 0;
+        return 4.5;
       case SPEECH_BUBBLES_INTAKE:
-        return 2.81;
+        return 0.775;
       case STORY_BOARDS_INTAKE:
         return 0;
       case STORY_BOARDS_SCORE:
@@ -200,9 +206,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getIntakeVoltage(intakeStates state) {
     switch (state) {
       case INTAKING:
-        return 4;
+        return 6;
       case OUTTAKING:
-        return -4;
+        return 0;
       case NOT_RUNNING:
         return 0;
       default:

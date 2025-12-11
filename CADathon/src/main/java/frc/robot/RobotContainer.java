@@ -135,12 +135,20 @@ public class RobotContainer {
     //       .onTrue(
     //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
     //       );
-    DRIVER.y().onTrue(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.NOT_RUNNING)).andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.INTAKING))));
+    DRIVER.y().onTrue(
+      new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
+      .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.INTAKING)))
+      ).onFalse(
+        new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
+        .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
+      );
 
-    DRIVER.back()
-          .onTrue(
-            coordSub.zeroEncoders()
-          );
+      DRIVER.b()
+      .onTrue(
+        new InstantCommand(() -> coordSub.setState(AbsoluteStates.INTAKING_SPEECH))
+      ).onFalse(
+        new InstantCommand(() -> coordSub.setState(AbsoluteStates.STORING))
+      );
 
     DRIVER.povUp()
           .whileTrue(
@@ -168,5 +176,10 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return null;
+  }
+
+
+  public CommandXboxController getController() {
+    return DRIVER;
   }
 }

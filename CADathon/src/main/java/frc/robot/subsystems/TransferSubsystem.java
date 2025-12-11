@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
@@ -34,8 +35,6 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   private transferStates currentState = transferStates.STORING;
-
-  private HashMap<transferStates, double[]> stateVoltageMap = new HashMap<>();
   
 
   /* ---------- Devices ---------- */
@@ -48,45 +47,9 @@ public class TransferSubsystem extends SubsystemBase {
   private boolean detectedSpeech;
 
   public TransferSubsystem() {
-
     configureTower();
     configureHopper();
-
-    configureMap();
-
     hasStateChanged = false;
-
-  }
-
-  private void configureMap() {
-
-    /* --------------- Hop - Tow ---- */
-    double[] tmpArr = {0.0, 0.0};
-    stateVoltageMap.put(transferStates.STORING, tmpArr);
-
-    // tmpArr[0] = 4.0;
-    // tmpArr[1] = 2;
-    // stateVoltageMap.put(transferStates.INTAKING, tmpArr);
-    
-    tmpArr[0] = 3;
-    tmpArr[1] = 1;
-    stateVoltageMap.put(transferStates.INTAKING, tmpArr);
-
-    // tmpArr[0] = 4.0;
-    // tmpArr[1] = 2.0;
-    stateVoltageMap.put(transferStates.PREPARING_FOR_SHOT, tmpArr);
-
-    // tmpArr[0] = 4;
-    // tmpArr[1] = 4;
-    stateVoltageMap.put(transferStates.FEEDING, tmpArr);
-
-    // tmpArr[0] = -6;
-    // tmpArr[1] = -6;
-    tmpArr[0] = 3;
-    tmpArr[1] = 1;
-    stateVoltageMap.put(transferStates.REJECTING, tmpArr);
-
-
   }
 
   private void configureTower() {
@@ -102,7 +65,7 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
-    canrangeConfig.ProximityParams.ProximityThreshold = 0.15; // meters, 0.15 is roughly half way, which is when we want to see the ball
+    canrangeConfig.ProximityParams.ProximityThreshold = 0.075; // meters, 0.15 is roughly half way, which is when we want to see the ball
     // canrangeConfig.ProximityParams.MinSignalStrengthForValidMeasurement //This should be used, but will need to see what the value should be when robot is built
 
     motorTowerWheels.getConfigurator().apply(motorConfig);
@@ -111,7 +74,7 @@ public class TransferSubsystem extends SubsystemBase {
 
   private void configureHopper() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -129,24 +92,61 @@ public class TransferSubsystem extends SubsystemBase {
   public void periodic() {
 
     Logger.recordOutput("HeroHeist/TransferSubsystem/CurrentState", currentState);
-    detectedSpeech = canrange.getIsDetected().getValue();
+    detectedSpeech = canrange.getIsDetected(true).getValue().booleanValue();
 
-    if (hasStateChanged) {
       applyStates();
-      hasStateChanged = false;
-    }
+
+    Logger.recordOutput("HeroHeist/TransferSubsystem/Tower/Ball Detected?", detectedSpeech);
     
   }
 
   private void applyStates() {
+    
+    double hopperVoltage = 0;
+    double towerVoltage = 0;
 
-    double[] voltageArr = stateVoltageMap.get(currentState);
+    switch (currentState) {
+      case STORING:
+        hopperVoltage = 0;
+        towerVoltage = 0;
+        break;
+
+      case INTAKING:
+        hopperVoltage = 3;
+        if (detectedSpeech) {
+          towerVoltage = 0;
+        } else {
+          towerVoltage = 0.75;
+        }
+        break;
+      
+      case PREPARING_FOR_SHOT:
+        hopperVoltage = 4;
+        if (detectedSpeech) {
+          towerVoltage = 0;
+        } else {
+          towerVoltage = 2;
+        }
+        break;
+
+      case FEEDING:
+        hopperVoltage = 4;
+        towerVoltage = 4;
+        break;
+
+      case REJECTING:
+        hopperVoltage = -3;
+        towerVoltage = -1;
+        break;
+
+      default:
+        hopperVoltage = 0;
+        towerVoltage = 0;
+        break;
+    }
     
-    double hopperVoltage = voltageArr[0];
-    double towerVoltage = voltageArr[1];
-    
-    Logger.recordOutput("HeroHeist/TransferSubsystem/hopperVoltage", hopperVoltage);
-    Logger.recordOutput("HeroHeist/TransferSubsystem/towerVoltage", towerVoltage);
+    Logger.recordOutput("HeroHeist/TransferSubsystem/Debugging/Hopper Voltage", hopperVoltage);
+    Logger.recordOutput("HeroHeist/TransferSubsystem/Debugging/Tower Voltage", towerVoltage);
 
     motorBottomRollers.setVoltage(hopperVoltage);
     motorSideRollers.setVoltage(hopperVoltage);

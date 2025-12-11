@@ -46,10 +46,7 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public CoordinationSubsystem() {
 
-        if (hasStateChanged) {
-            applyState();
-            hasStateChanged = false;
-        }
+        applyState();
         
         publishLogs();
     }
@@ -163,11 +160,6 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public Command setScoringLocationCommand(ScoringLocation location) {
         return new InstantCommand(() -> setScoringLocation(location));
-    }
-
-    public Command zeroEncoders() {
-        return new InstantCommand(() -> intakeInstance.zeroEncoder())
-                        .alongWith(new InstantCommand(() -> shooterInstance.forceHoodZero()));
     }
 
     public ScoringLocation getScoringLocation() {

@@ -10,7 +10,9 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.CoordinationSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 
@@ -25,6 +27,9 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
   private final ShooterSubsystem shooterSub = ShooterSubsystem.getInstance();
   private final CoordinationSubsystem coordSub = CoordinationSubsystem.getInstance();
+  private final IntakeSubsystem intakeSub = IntakeSubsystem.getInstance();
+
+  private CommandXboxController DRIVER;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -35,6 +40,8 @@ public class Robot extends LoggedRobot {
     Logger.addDataReceiver(new NT4Publisher());
 
     m_robotContainer = new RobotContainer();
+
+    DRIVER = m_robotContainer.getController();
     Logger.start();
 
   }
@@ -64,6 +71,12 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     shooterSub.updateShooterConstants();
+
+    if (DRIVER.back().getAsBoolean()) {
+      shooterSub.forceHoodZero();
+      intakeSub.zeroEncoder();
+    }
+
   }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */

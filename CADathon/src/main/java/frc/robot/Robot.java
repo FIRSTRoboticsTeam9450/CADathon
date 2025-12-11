@@ -73,7 +73,7 @@ public class Robot extends LoggedRobot {
     shooterSub.updateShooterConstants();
     intakeSub.updateConstants();
 
-    if (DRIVER.back().getAsBoolean() && DRIVER.start().getAsBoolean()) {
+    if (DRIVER.back().getAsBoolean()) {
       shooterSub.forceHoodZero();
       intakeSub.zeroEncoder();
     }

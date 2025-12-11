@@ -21,6 +21,8 @@ import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
+import frc.robot.subsystems.ShooterSubsystem.AngleState;
+import frc.robot.subsystems.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.TransferSubsystem.transferStates;
 import frc.robot.util.BezierCurve;
 
@@ -135,6 +137,7 @@ public class RobotContainer {
     //       .onTrue(
     //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
     //       );
+
     DRIVER.y().onTrue(
       new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
       .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.INTAKING)))
@@ -142,30 +145,51 @@ public class RobotContainer {
         new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
         .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
       );
+
     DRIVER.b().onTrue(
-      new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
-      .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING)))
+      new InstantCommand(() -> shooterSub.setShooterVoltage(3))
+      .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.OVERRIDE)))
+      .alongWith(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
+      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING))))
       ).onFalse(
-        new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
-        .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
+        new InstantCommand(() -> shooterSub.setShooterVoltage(0))
+        .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING)))
+        .alongWith(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
+        .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING))))
       );
+
+    DRIVER.a().onTrue(
+      new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.OVERRIDE))
+      .alongWith(new InstantCommand(() -> shooterSub.setShooterVoltage(6)))
+      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING)))
+    ).onFalse(
+      new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
+      .alongWith(new InstantCommand(() -> shooterSub.setShooterVoltage(0)))
+      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
+    );
+
+    DRIVER.x().onTrue(
+      new InstantCommand(() -> shooterSub.setVelocitySetpoint(6))
+      .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.SHOOTING)))
+    );
+    DRIVER.x().onFalse(new InstantCommand(()-> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING)));
 
     DRIVER.povUp()
           .whileTrue(
-           coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
-            .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
+           new InstantCommand(() -> shooterSub.setWantedState(AngleState.AIMING, ShooterState.IDLING))
+            .alongWith(new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3)))
           );
 
     DRIVER.povDown()
           .whileTrue(
-            coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
-            .andThen(new InstantCommand(() -> shooterSub.setAngleVoltage(-0.05)))
+            new InstantCommand(() -> shooterSub.setWantedState(AngleState.AIMING, ShooterState.IDLING))
+            .alongWith(new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
           );
 
     DRIVER.povDown()
           .or(DRIVER.povUp())
           .onFalse(
-            new InstantCommand(() -> shooterSub.setAngleVoltage(0))
+            new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
           );
   }
 

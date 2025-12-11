@@ -86,7 +86,7 @@ public class IntakeSubsystem extends SubsystemBase {
   
   public void configIntakeMotor() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -101,7 +101,7 @@ public class IntakeSubsystem extends SubsystemBase {
   
   public void configIntakePivot() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -164,10 +164,10 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private void publishLogs() {
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/TargetPos", targetPos);
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/MotorPos", motorPivot.getPosition().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/setpoint", setpoint);
-    Logger.recordOutput("HeroHeist/IntakeSubsystem/velocity", motorPivot.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Intake/TargetPos", targetPos);
+    Logger.recordOutput("HeroHeist/Intake/MotorPos", motorPivot.getPosition().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Intake/setpoint", setpoint);
+    Logger.recordOutput("HeroHeist/Intake/velocity", motorPivot.getVelocity().getValueAsDouble());
   }
 
   public boolean atSetpoint() {

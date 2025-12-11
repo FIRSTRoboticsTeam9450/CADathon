@@ -89,12 +89,12 @@ public class TransferSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    Logger.recordOutput("HeroHeist/TransferSubsystem/CurrentState", currentState);
+    Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
     detectedSpeech = canrange.getIsDetected(true).getValue().booleanValue();
 
       applyStates();
 
-    Logger.recordOutput("HeroHeist/TransferSubsystem/Tower/Ball Detected?", detectedSpeech);
+    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
     
   }
 
@@ -143,8 +143,8 @@ public class TransferSubsystem extends SubsystemBase {
         break;
     }
     
-    Logger.recordOutput("HeroHeist/TransferSubsystem/Debugging/Hopper Voltage", hopperVoltage);
-    Logger.recordOutput("HeroHeist/TransferSubsystem/Debugging/Tower Voltage", towerVoltage);
+    Logger.recordOutput("HeroHeist/Transfer/Debugging/Hopper Voltage", hopperVoltage);
+    Logger.recordOutput("HeroHeist/Transfer/Debugging/Tower Voltage", towerVoltage);
 
     motorBottomRollers.setVoltage(hopperVoltage);
     motorSideRollers.setVoltage(hopperVoltage);

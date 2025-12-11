@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -12,6 +13,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -27,6 +29,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private static ShooterSubsystem INSTANCE;
 
   public enum ShooterState {
+    OVERRIDE,
     IDLING,
     SHOOTING
   }
@@ -45,14 +48,17 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorAngle = new TalonFX(ShooterConstants.ANGLE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
 
+  private VoltageOut voltageRequest;
+
   private boolean wheelsSpunUp = false;
 
+  private double flywheelVoltage = 0;
   private double angleSetpoint = 0;
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private final double mmVelocity = 2;
-  private final double mmAcceleration = 1;
+  private final double mmVelocity = 4;
+  private final double mmAcceleration = 4;
   private final double mmJerk = 400;
 
   // Feedforward and PIDF constants
@@ -73,9 +79,9 @@ public class ShooterSubsystem extends SubsystemBase {
   private DynamicMotionMagicVoltage mmRequest;
 
   private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
-  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.12);
+  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.2);
   private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.11);
-  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0.5);
+  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0);
   private double vKS = logVKS.get();
   private double vKV = logVKV.get();
   private double vKP = logVKP.get();
@@ -85,7 +91,9 @@ public class ShooterSubsystem extends SubsystemBase {
   private double velocitySetpoint = 0;
 
 
-  private final double maxdHoodVoltage;
+  private final double maxHoodVoltage;
+
+  private boolean onlyOnChange = false;
 
   private boolean isZeroingDone = false;
 
@@ -96,8 +104,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     mmRequest = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
     vRequest = new VelocityVoltage(0).withSlot(vSlot);
+    voltageRequest = new VoltageOut(0);
 
-    maxdHoodVoltage = 0.15;
+    maxHoodVoltage = 1;
     
     isZeroingDone = false;
 
@@ -135,11 +144,9 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 20;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.3;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = 10;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = 20;
 
     Slot0Configs slot0Config = new Slot0Configs().withKS(mmKS)
                                                  .withKV(mmKV)
@@ -155,8 +162,10 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = mmVelocity;
     motorConfig.MotionMagic.MotionMagicJerk = mmJerk;
 
-    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2; //Set this to however many rotations the motor encoder reads when the hood is just about to run off the gears.
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 4.530273;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
 
     motorAngle.getConfigurator().apply(motorConfig);
   }
@@ -191,7 +200,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
   private boolean zeroEncoder() {
-    motorAngle.setVoltage(-0.04);
+    motorAngle.setVoltage(-0.55);
     if (Math.abs(motorAngle.getVelocity().getValueAsDouble()) < 0.1) {
       motorAngle.setPosition(0);
       motorAngle.setVoltage(0);
@@ -207,11 +216,16 @@ public class ShooterSubsystem extends SubsystemBase {
     //   currentAngleState = AngleState.STORING;
     //   isZeroingDone = zeroEncoder();
     // }
-    //applyState();
+    applyState();
+    publishLogs();
   }
 
   private void applyState() {
     switch (currentShooterState) {
+      case OVERRIDE:
+        motorWheelFront.setControl(voltageRequest);
+        break;
+
       case SHOOTING:
         motorWheelFront.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
 
@@ -219,7 +233,8 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case IDLING:
-        motorWheelFront.setVoltage(0);
+        setShooterVoltage(0);
+        motorWheelFront.setControl(voltageRequest);
         break;
     }
 
@@ -234,13 +249,29 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case IDLING:
-        motorAngle.setControl(mmRequest.withPosition(motorAngle.getPosition().getValueAsDouble()));
+        if (onlyOnChange) {
+          onlyOnChange = false;
+          setShooterAngleSetpoint(motorAngle.getPosition().getValueAsDouble());
+        }
+        motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
         break;
 
       case AIMING:
         motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
         break;
     }
+  }
+
+  private void publishLogs() {
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Voltage", motorAngle.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Current State", currentAngleState);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", angleSetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelFront.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelFront.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelBack.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Spun Up", wheelsSpunUp);
   }
 
   /* --------------- Calculations --------------- */
@@ -273,6 +304,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setWantedState(AngleState angleState, ShooterState shooterState) {
+    onlyOnChange = true;
     currentAngleState = angleState;
     currentShooterState = shooterState;
   }
@@ -282,8 +314,14 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param voltage
    */
   public void setAngleVoltage(double voltage) {
-    voltage = MathUtil.clamp(voltage, -maxdHoodVoltage, maxdHoodVoltage);
+    voltage = MathUtil.clamp(voltage, -maxHoodVoltage, maxHoodVoltage);
     angleVoltage = voltage;
+  }
+
+  public void setShooterVoltage(double voltage) {
+    voltage = MathUtil.clamp(voltage, -12, 12);
+    flywheelVoltage = voltage;
+    voltageRequest.Output = voltage;
   }
 
   public void updateShooterConstants() {

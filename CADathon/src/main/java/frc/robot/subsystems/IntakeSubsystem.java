@@ -168,10 +168,11 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Intake/MotorPos", motorPivot.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Intake/setpoint", setpoint);
     Logger.recordOutput("HeroHeist/Intake/velocity", motorPivot.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Intake/At setpoint", atSetpoint());
   }
 
   public boolean atSetpoint() {
-    return Math.abs(getPosition(currentPos) - getPosition(targetPos)) < .1;
+    return Math.abs(motorPivot.getPosition().getValueAsDouble() - getPosition(targetPos)) < .1;
   }
 
   public void setTargetPos(intakePos targetPos, intakeStates targetState) {
@@ -255,10 +256,10 @@ public class IntakeSubsystem extends SubsystemBase {
   /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
-    if(atSetpoint()) {
+    // if(atSetpoint()) {
       currState = targetState;
       motorIntake.setVoltage(voltage);
-    }
+    // }
   }
 
   public void setSetpoint(double setpoint) {

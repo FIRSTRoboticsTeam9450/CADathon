@@ -43,7 +43,10 @@ public class CoordinationSubsystem extends SubsystemBase{
     private ScoringLocation wantedScoringLocation = ScoringLocation.DOWNTOWN;
 
     public CoordinationSubsystem() {
+    }
 
+    @Override
+    public void periodic() {
         applyState();
         
         publishLogs();
@@ -57,6 +60,12 @@ public class CoordinationSubsystem extends SubsystemBase{
         ShooterState shooterState = ShooterState.IDLING;
         AngleState shooterAngleState = AngleState.IDLING;
         
+        if(currentState == AbsoluteStates.PREPARING_FOR_SHOT) {
+
+            if(!shooterInstance.shooterReady()) {
+                currentState = AbsoluteStates.SHOOTING_SPEECH;
+            }
+        }
         switch (currentState) {
             case SHOOTER_OVERRIDE:
                 shooterState = ShooterState.SHOOTING;
@@ -87,11 +96,11 @@ public class CoordinationSubsystem extends SubsystemBase{
                 break;
             
             case PREPARING_FOR_SHOT:
-                    transferState = transferStates.PREPARING_FOR_SHOT;
-                    intakeState = intakePos.STORE;
-                    intaking = intakeStates.NOT_RUNNING;
-                    shooterState = ShooterState.SHOOTING;
-                    shooterAngleState = AngleState.AIMING;
+                transferState = transferStates.PREPARING_FOR_SHOT;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.NOT_RUNNING;
+                shooterState = ShooterState.SHOOTING;
+                shooterAngleState = AngleState.AIMING;
                 break;
 
             case SHOOTING_SPEECH:
@@ -133,6 +142,7 @@ public class CoordinationSubsystem extends SubsystemBase{
         Logger.recordOutput("HeroHesit/Coordination/Faults/Intake Instance null?", intakeInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Transfer Instance null?", transferInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/CurrentState", currentState);
     }
 
     public void setState(AbsoluteStates wantedState) {

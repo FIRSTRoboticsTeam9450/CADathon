@@ -11,6 +11,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.TransferConstants;
@@ -44,6 +45,8 @@ public class TransferSubsystem extends SubsystemBase {
   private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
 
   private boolean detectedSpeech;
+  private Timer timer = new Timer();
+  private boolean runFoward = false;
 
   public TransferSubsystem() {
     configureTower();
@@ -63,7 +66,7 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
-    canrangeConfig.ProximityParams.ProximityThreshold = 0.075; // meters, 0.15 is roughly half way, which is when we want to see the ball
+    canrangeConfig.ProximityParams.ProximityThreshold = 0.07; // meters, 0.15 is roughly half way, which is when we want to see the ball
     // canrangeConfig.ProximityParams.MinSignalStrengthForValidMeasurement //This should be used, but will need to see what the value should be when robot is built
 
     motorTowerWheels.getConfigurator().apply(motorConfig);
@@ -90,11 +93,13 @@ public class TransferSubsystem extends SubsystemBase {
   public void periodic() {
 
     Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
-    detectedSpeech = canrange.getIsDetected(true).getValue().booleanValue();
-
+    //detectedSpeech = ;
+    if(!getCANRangeTriggered()) {
+      runFoward = false;
+    }
       applyStates();
 
-    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
+    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", getCANRangeTriggered());
     
   }
 
@@ -111,19 +116,31 @@ public class TransferSubsystem extends SubsystemBase {
 
       case INTAKING:
         hopperVoltage = 3;
-        if (detectedSpeech) {
+        if (getCANRangeTriggered() && !runFoward) {
+          towerVoltage = 0.1;
+          timer.reset();
+          timer.start();
+          runFoward = true;
+        } else if (runFowardDone()) {
           towerVoltage = 0;
-        } else {
+          timer.stop();
+        } else if(!runFoward){
           towerVoltage = 0.75;
         }
         break;
       
       case PREPARING_FOR_SHOT:
         hopperVoltage = 4;
-        if (detectedSpeech) {
+        if (getCANRangeTriggered() && !runFoward) {
+          towerVoltage = 0.1;
+          timer.reset();
+          timer.start();
+          runFoward = true;
+        } else if (runFowardDone()) {
           towerVoltage = 0;
-        } else {
-          towerVoltage = 2;
+          timer.stop();
+        } else if(!runFoward){
+          towerVoltage = 0.75;
         }
         break;
 
@@ -151,6 +168,13 @@ public class TransferSubsystem extends SubsystemBase {
     motorTowerWheels.setVoltage(towerVoltage);
   }
 
+  public boolean runFowardDone() {
+    if(timer.get() > .1) {
+      return true;
+    }
+    return false;
+  }
+
   public void setWantedState(transferStates wantedState) {
     currentState = wantedState;
   }
@@ -160,7 +184,7 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   public boolean getCANRangeTriggered() {
-    return detectedSpeech;
+    return canrange.getIsDetected(true).getValue().booleanValue();
   }
 
   public static TransferSubsystem getInstance() {

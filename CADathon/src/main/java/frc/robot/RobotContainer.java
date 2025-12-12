@@ -103,7 +103,7 @@ public class RobotContainer {
           );
     DRIVER.rightTrigger()
           .onTrue(
-            coordSub.setStateCommand(AbsoluteStates.SHOOTING_SPEECH)
+            coordSub.setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT)
           ).onFalse(
             coordSub.setStateCommand(AbsoluteStates.STORING)
           );

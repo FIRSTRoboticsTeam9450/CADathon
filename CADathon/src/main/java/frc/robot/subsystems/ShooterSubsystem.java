@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
+import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 
 public class ShooterSubsystem extends SubsystemBase {
 
@@ -40,6 +41,7 @@ public class ShooterSubsystem extends SubsystemBase {
     IDLING,
     AIMING
   }
+
 
   private ShooterState currentShooterState = ShooterState.IDLING;
   private AngleState currentAngleState = AngleState.STORING;
@@ -88,7 +90,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vKFF = logVKFF.get();
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
-  private double velocitySetpoint = 0;
+  private double velocitySetpoint = 30;
 
 
   private final double maxHoodVoltage;
@@ -218,6 +220,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // }
     applyState();
     publishLogs();
+    shooterReady();
   }
 
   private void applyState() {
@@ -268,10 +271,12 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", angleSetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/VelocitySetpoint", velocitySetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelFront.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelFront.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelBack.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Spun Up", wheelsSpunUp);
+
   }
 
   /* --------------- Calculations --------------- */
@@ -281,7 +286,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return
    */
   private boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(.5);
+    return rpmWithinTolerance(2); // used to be .5 got to tune it more
   }
 
   /**

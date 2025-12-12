@@ -142,7 +142,8 @@ public class CoordinationSubsystem extends SubsystemBase{
         Logger.recordOutput("HeroHesit/Coordination/Faults/Intake Instance null?", intakeInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Transfer Instance null?", transferInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
-        Logger.recordOutput("HeroHeist/Coordination/CurrentState", currentState);
+        Logger.recordOutput("HeroHeist/Coordination/Current State", currentState);
+        Logger.recordOutput("HeroHeist/Coordination/Wanted Scoring Type", wantedScoringLocation);
     }
 
     public void setState(AbsoluteStates wantedState) {

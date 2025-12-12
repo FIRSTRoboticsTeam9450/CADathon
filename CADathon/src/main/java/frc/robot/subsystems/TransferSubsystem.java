@@ -175,6 +175,11 @@ public class TransferSubsystem extends SubsystemBase {
     return false;
   }
 
+  private void publishLogs() {
+    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
+    Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
+  }
+
   public void setWantedState(transferStates wantedState) {
     currentState = wantedState;
   }

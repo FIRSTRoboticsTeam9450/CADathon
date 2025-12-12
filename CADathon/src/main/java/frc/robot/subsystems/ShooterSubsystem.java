@@ -11,6 +11,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -46,8 +47,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private ShooterState currentShooterState = ShooterState.IDLING;
   private AngleState currentAngleState = AngleState.STORING;
   
-  private TalonFX motorWheelFront = new TalonFX(ShooterConstants.FRONT_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
-  private TalonFX motorWheelBack = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorWheelLeader = new TalonFX(ShooterConstants.FRONT_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorWheelFollower = new TalonFX(ShooterConstants.BACK_WHEEL_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorAngle = new TalonFX(ShooterConstants.ANGLE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
 
   private VoltageOut voltageRequest;
@@ -59,9 +60,12 @@ public class ShooterSubsystem extends SubsystemBase {
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private final double mmVelocity = 4;
-  private final double mmAcceleration = 4;
-  private final double mmJerk = 400;
+  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Velocity", 4);
+  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Acceleration", 4);
+  private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Jerk", 400);
+  private double mmVelocity = logMMVeloc.get();
+  private double mmAcceleration = logMMAccel.get();
+  private double mmJerk = logMMJerk.get();
 
   // Feedforward and PIDF constants
   private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0);
@@ -134,10 +138,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     motorConfig.Slot0 = slot0Config;
 
-    motorWheelFront.getConfigurator().apply(motorConfig);
-    motorWheelBack.getConfigurator().apply(motorConfig);
+    motorWheelLeader.getConfigurator().apply(motorConfig);
+    motorWheelFollower.getConfigurator().apply(motorConfig);
 
-    motorWheelBack.setControl(new StrictFollower(motorWheelFront.getDeviceID()));
+    motorWheelFollower.setControl(new StrictFollower(motorWheelLeader.getDeviceID()));
   }
 
   private void configureAngleMotor() {
@@ -196,8 +200,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     motorConfig.Slot0 = slot0Config;
 
-    motorWheelFront.getConfigurator().apply(motorConfig);
-    motorWheelBack.getConfigurator().apply(motorConfig);
+    motorWheelLeader.getConfigurator().apply(motorConfig);
+    motorWheelFollower.getConfigurator().apply(motorConfig);
   }
 
 
@@ -226,18 +230,18 @@ public class ShooterSubsystem extends SubsystemBase {
   private void applyState() {
     switch (currentShooterState) {
       case OVERRIDE:
-        motorWheelFront.setControl(voltageRequest);
+        motorWheelLeader.setControl(voltageRequest);
         break;
 
       case SHOOTING:
-        motorWheelFront.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
+        motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
 
         wheelsSpunUp = rpmWithinTolerance();
         break;
 
       case IDLING:
         setShooterVoltage(0);
-        motorWheelFront.setControl(voltageRequest);
+        motorWheelLeader.setControl(voltageRequest);
         break;
     }
 
@@ -275,6 +279,9 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelFront.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelFront.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelBack.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/(Leader) Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/(Follower) Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Spun Up", wheelsSpunUp);
 
   }
@@ -295,7 +302,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return if withing tolerance
    */
   private boolean rpmWithinTolerance(double tolerance) {
-    return Math.abs(velocitySetpoint - motorWheelFront.getVelocity().getValueAsDouble()) < tolerance;
+    return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
   }
 
   /* --------------- Setters --------------- */
@@ -358,6 +365,9 @@ public class ShooterSubsystem extends SubsystemBase {
     double lMMKIVal = logMMKI.get();
     double lMMKDVal = logMMKD.get();
     double lMMKGVal = logMMKG.get();
+    double lMMVeloc = logMMVeloc.get();
+    double lMMAcc = logMMAccel.get();
+    double lMMJerk = logMMJerk.get();
 
     updateAngleVals = (mmKS != lMMKSVal)
                    || (mmKV != lMMKVVal)
@@ -365,7 +375,10 @@ public class ShooterSubsystem extends SubsystemBase {
                    || (mmKP != lMMKPVal)
                    || (mmKI != lMMKIVal)
                    || (mmKD != lMMKDVal)
-                   || (mmKG != lMMKGVal);
+                   || (mmKG != lMMKGVal)
+                   || (mmVelocity != lMMVeloc)
+                   || (mmAcceleration != lMMAcc)
+                   || (mmJerk != lMMJerk);
 
     if (updateAngleVals) {
       mmKS = lMMKSVal;
@@ -377,6 +390,12 @@ public class ShooterSubsystem extends SubsystemBase {
       mmKG = lMMKGVal;
 
       updateShooterAngleConstants();
+
+      mmVelocity = lMMVeloc;
+      mmAcceleration = lMMAcc;
+      mmJerk = lMMJerk;
+
+      mmRequest = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
     }
     
   }

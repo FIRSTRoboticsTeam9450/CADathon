@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 /**
@@ -22,8 +23,10 @@ public final class Constants {
   public final class RobotConstants {
 
     /* ---------- CAN Bus Names --------- */
-    public static final String CANIVORE_BUS = "CantDrive";
-    public static final String RIO_BUS = "Rio";
+    public static final String CANIVORE_BUS_NAME = "CantDrive";
+    public static final String RIO_BUS_NAME = "Rio";
+    public static final CANBus CANIVORE_BUS = new CANBus(CANIVORE_BUS_NAME);
+    public static final CANBus RIO_BUS = new CANBus(RIO_BUS_NAME);
 
     /* ---------- Default Neutral Mode for Motors ---------- */
     public static final NeutralModeValue DEFAULT_NEUTRAL_MODE = NeutralModeValue.Brake;

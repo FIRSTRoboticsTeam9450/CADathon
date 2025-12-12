@@ -88,14 +88,10 @@ public class TransferSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
-
-    Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
     detectedSpeech = canrange.getIsDetected(true).getValue().booleanValue();
 
-      applyStates();
-
-    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
-    
+    applyStates();
+    publishLogs();
   }
 
   private void applyStates() {
@@ -149,6 +145,11 @@ public class TransferSubsystem extends SubsystemBase {
     motorBottomRollers.setVoltage(hopperVoltage);
     motorSideRollers.setVoltage(hopperVoltage);
     motorTowerWheels.setVoltage(towerVoltage);
+  }
+
+  private void publishLogs() {
+    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
+    Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
   }
 
   public void setWantedState(transferStates wantedState) {

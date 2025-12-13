@@ -278,6 +278,8 @@ public class VisionSubsystem extends SubsystemBase {
         Logger.recordOutput("HeroHeist/Vision/FR/Last FR Confidence", lastFRConfidence);
 
         Logger.recordOutput("HeroHeist/Vision/Faults/Drivetrain instance null?", drivetrain == null);
+
+        Logger.recordOutput("HeroHeist/Vision/FR/Distance", getDistanceToTarget(lastTargetPose));
     }
 
     // -------------------------

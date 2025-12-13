@@ -94,7 +94,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vKFF = logVKFF.get();
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tunable/Shooter/Outtake/Velocity", 45);
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity", 45);
   private double velocitySetpoint = logVelocitySetpoint.get();
 
 

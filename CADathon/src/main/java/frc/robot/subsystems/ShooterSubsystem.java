@@ -94,7 +94,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vKFF = logVKFF.get();
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tunable/Shooter/Outtake/Velocity", 30);
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tunable/Shooter/Outtake/Velocity", 45);
   private double velocitySetpoint = logVelocitySetpoint.get();
 
 
@@ -294,7 +294,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return
    */
   private boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(2); // used to be .5 got to tune it more
+    return rpmWithinTolerance(13.5); // used to be .5 got to tune it more
   }
 
   /**
@@ -410,7 +410,10 @@ public class ShooterSubsystem extends SubsystemBase {
   /* --------------- Getters -------------- */
 
   public boolean shooterReady () {
-    if(wheelsSpunUp && angleAtSetpoint()) {
+    // if(wheelsSpunUp && angleAtSetpoint()) {
+    //   return true;
+    // }
+    if (wheelsSpunUp) {
       return true;
     }
     return false;

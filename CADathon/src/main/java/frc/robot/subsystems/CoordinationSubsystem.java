@@ -105,8 +105,8 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case SHOOTING_SPEECH:
                 transferState = transferStates.FEEDING;
-                intakeState = intakePos.STORY_BOARDS_SCORE;
-                intaking = intakeStates.OUTTAKING;
+                intakeState = intakePos.STORE;
+                intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.SHOOTING;
                 shooterAngleState = AngleState.AIMING;
                 break;

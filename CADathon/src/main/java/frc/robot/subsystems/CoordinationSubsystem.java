@@ -62,7 +62,7 @@ public class CoordinationSubsystem extends SubsystemBase{
         
         if(currentState == AbsoluteStates.PREPARING_FOR_SHOT) {
 
-            if(!shooterInstance.shooterReady()) {
+            if(shooterInstance.shooterReady()) {
                 currentState = AbsoluteStates.SHOOTING_SPEECH;
             }
         }

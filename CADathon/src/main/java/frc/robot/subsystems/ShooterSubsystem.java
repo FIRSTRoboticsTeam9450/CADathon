@@ -94,7 +94,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vKFF = logVKFF.get();
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
-  private double velocitySetpoint = 30;
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tunable/Shooter/Outtake/Velocity", 30);
+  private double velocitySetpoint = logVelocitySetpoint.get();
 
 
   private final double maxHoodVoltage;
@@ -276,9 +277,9 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", angleSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/VelocitySetpoint", velocitySetpoint);
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelFront.getVelocity().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelFront.getMotorVoltage().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelBack.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/(Leader) Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/(Follower) Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());

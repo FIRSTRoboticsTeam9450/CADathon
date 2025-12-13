@@ -139,41 +139,6 @@ public class RobotContainer {
     //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
     //       );
 
-    DRIVER.y().onTrue(
-      new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
-      .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.INTAKING)))
-      ).onFalse(
-        new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
-        .andThen(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
-      );
-
-    DRIVER.b().onTrue(
-      new InstantCommand(() -> shooterSub.setShooterVoltage(3))
-      .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.OVERRIDE)))
-      .alongWith(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.SPEECH_BUBBLES_INTAKE, intakeStates.INTAKING))
-      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING))))
-      ).onFalse(
-        new InstantCommand(() -> shooterSub.setShooterVoltage(0))
-        .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING)))
-        .alongWith(new InstantCommand(() -> intakeSub.setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING))
-        .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING))))
-      );
-
-    DRIVER.a().onTrue(
-      new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.OVERRIDE))
-      .alongWith(new InstantCommand(() -> shooterSub.setShooterVoltage(6)))
-      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.FEEDING)))
-    ).onFalse(
-      new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
-      .alongWith(new InstantCommand(() -> shooterSub.setShooterVoltage(0)))
-      .alongWith(new InstantCommand(() -> transferSub.setWantedState(transferStates.STORING)))
-    );
-
-    DRIVER.x().onTrue(
-      new InstantCommand(() -> shooterSub.setVelocitySetpoint(6))
-      .alongWith(new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.SHOOTING)))
-    );
-    DRIVER.x().onFalse(new InstantCommand(()-> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING)));
 
     DRIVER.povUp()
           .whileTrue(
@@ -196,6 +161,9 @@ public class RobotContainer {
     DRIVER.start().onTrue(
       new InstantCommand(() -> new ResetIMU(drivetrain))
     );
+
+
+    //look for .until() for having shooter wait to feed till shooter is at wanted Veloc and angle
   }
 
   /**

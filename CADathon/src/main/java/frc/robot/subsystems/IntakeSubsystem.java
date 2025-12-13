@@ -40,8 +40,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS); // Good voltage is around 1.5V
 
-  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 9);
-  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 11);
+  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 11);
+  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 13);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Jerk", 1000);
 
   private double velocity = logMMVel.get();
@@ -51,10 +51,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kS", 0);
   private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kV", 0);
   private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kA", 0);
-  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 15);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 20);
   private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kI", 0);
   private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kD", 0);
-  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0.2);
 
   private double kS = logMMKS.get(); // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
   private double kV = logMMKV.get(); // A velocity target of 1 rps results in 0.12 V output .12
@@ -101,7 +101,7 @@ public class IntakeSubsystem extends SubsystemBase {
   
   public void configIntakePivot() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -168,11 +168,10 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Intake/MotorPos", motorPivot.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Intake/setpoint", setpoint);
     Logger.recordOutput("HeroHeist/Intake/velocity", motorPivot.getVelocity().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Intake/At setpoint", atSetpoint());
   }
 
   public boolean atSetpoint() {
-    return Math.abs(motorPivot.getPosition().getValueAsDouble() - getPosition(targetPos)) < .1;
+    return Math.abs(getPosition(currentPos) - getPosition(targetPos)) < .1;
   }
 
   public void setTargetPos(intakePos targetPos, intakeStates targetState) {
@@ -256,10 +255,10 @@ public class IntakeSubsystem extends SubsystemBase {
   /*** ____________________________________ SETTERS ____________________________________ ***/
 
   public void setIntakeVoltage(double voltage) {
-    // if(atSetpoint()) {
+    if(atSetpoint()) {
       currState = targetState;
       motorIntake.setVoltage(voltage);
-    // }
+    }
   }
 
   public void setSetpoint(double setpoint) {
@@ -273,7 +272,7 @@ public class IntakeSubsystem extends SubsystemBase {
       case STORE:
         return 4.5;
       case SPEECH_BUBBLES_INTAKE:
-        return 0.775;
+        return 0.7;
       case STORY_BOARDS_INTAKE:
         return 0;
       case STORY_BOARDS_SCORE:

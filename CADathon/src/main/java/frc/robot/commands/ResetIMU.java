@@ -12,6 +12,8 @@ public class ResetIMU extends Command {
 
     public ResetIMU(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
+
+        addRequirements(drivetrain);
     }
 
     @Override

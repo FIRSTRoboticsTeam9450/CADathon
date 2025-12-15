@@ -85,16 +85,22 @@ public class ShooterSubsystem extends SubsystemBase {
   private DynamicMotionMagicVoltage mmRequest;
 
   private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
-  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.2);
-  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.11);
+  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.15);
+  private LoggedNetworkNumber logVKA = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kA", 0.01);
+  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.5);
   private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0);
+  private LoggedNetworkNumber logVAccel = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Acceleration", 100);
+  private LoggedNetworkNumber logVJerk = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Jerk", 4000);
   private double vKS = logVKS.get();
   private double vKV = logVKV.get();
+  private double vKA = logVKA.get();
   private double vKP = logVKP.get();
   private double vKFF = logVKFF.get();
+  private double vAccel = logVAccel.get();
+  private double vJerk = logVJerk.get();
   private final int vSlot = 0;
-  private final VelocityVoltage vRequest;
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity", 45);
+  private final MotionMagicVelocityVoltage vRequest;
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45);
   private double velocitySetpoint = logVelocitySetpoint.get();
 
 
@@ -110,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
     configureAngleMotor();
 
     mmRequest = new DynamicMotionMagicVoltage(0, mmVelocity, mmAcceleration, mmJerk);
-    vRequest = new VelocityVoltage(0).withSlot(vSlot);
+    vRequest = new MotionMagicVelocityVoltage(0).withSlot(vSlot);
     voltageRequest = new VoltageOut(0);
 
     maxHoodVoltage = 1;
@@ -135,9 +141,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
     Slot0Configs slot0Config = new Slot0Configs().withKS(vKS)
                                                  .withKV(vKV)
+                                                 .withKA(vKA)
                                                  .withKP(vKP);
 
     motorConfig.Slot0 = slot0Config;
+
+    motorConfig.MotionMagic.MotionMagicAcceleration = vAccel;
+    motorConfig.MotionMagic.MotionMagicJerk = vJerk;
 
     motorWheelLeader.getConfigurator().apply(motorConfig);
     motorWheelFollower.getConfigurator().apply(motorConfig);
@@ -197,9 +207,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
     Slot0Configs slot0Config = new Slot0Configs().withKS(vKS)
                                                  .withKV(vKV)
+                                                 .withKA(vKA)
                                                  .withKP(vKP);
 
     motorConfig.Slot0 = slot0Config;
+
+    motorConfig.MotionMagic.MotionMagicAcceleration = vAccel;
+    motorConfig.MotionMagic.MotionMagicJerk = vJerk;
 
     motorWheelLeader.getConfigurator().apply(motorConfig);
     motorWheelFollower.getConfigurator().apply(motorConfig);
@@ -294,7 +308,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return
    */
   private boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(13.5); // used to be .5 got to tune it more
+    return rpmWithinTolerance(2); // used to be .5 got to tune it more
   }
 
   /**
@@ -343,19 +357,31 @@ public class ShooterSubsystem extends SubsystemBase {
 
     double lVKSVal = logVKS.get();
     double lVKVVal = logVKV.get();
+    double lVKAVal = logVKA.get();
     double lVKPVal = logVKP.get();
     double lVKFFVal = logVKFF.get();
+    double lVAccel = logVAccel.get();
+    double lVJerk = logVJerk.get();
+    double lVVSVal = logVelocitySetpoint.get();
 
     updateOuttakeVals = (vKS != lVKSVal)
                      || (vKV != lVKVVal)
+                     || (vKA != lVKAVal)
                      || (vKP != lVKPVal)
-                     || (vKFF != lVKFFVal);
+                     || (vKFF != lVKFFVal)
+                     || (vAccel != lVAccel)
+                     || (vJerk != lVJerk)
+                     || (velocitySetpoint != lVVSVal);
 
     if (updateOuttakeVals) {
       vKS = lVKSVal;
       vKV = lVKVVal;
+      vKA =lVKAVal;
       vKP = lVKPVal;
       vKFF = lVKFFVal;
+      vAccel = lVAccel;
+      vJerk = lVJerk;
+      velocitySetpoint = lVVSVal;
       updateShooterVelocityConstants();
     }
 

@@ -100,7 +100,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.IDLING;
                 break;
 
             case SHOOTING_SPEECH:
@@ -108,7 +108,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.IDLING; // Used to be aiming
                 break;
 
             case SHOOT_STORY:

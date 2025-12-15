@@ -20,6 +20,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
@@ -60,7 +61,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Velocity", 4);
+  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Voltage", 4);
   private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Acceleration", 4);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Jerk", 400);
   private double mmVelocity = logMMVeloc.get();
@@ -92,17 +93,26 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vKV = logVKV.get();
   private double vKP = logVKP.get();
   private double vKFF = logVKFF.get();
+
   private final int vSlot = 0;
   private final VelocityVoltage vRequest;
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity", 45);
-  private double velocitySetpoint = logVelocitySetpoint.get();
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage", 4); // used to be 45
+  private double voltageSetpoint = logVelocitySetpoint.get();
 
+  private LoggedNetworkNumber logDistanceAway = new LoggedNetworkNumber("/Tuning/Shooter/Distance", 1);
+  private double distanceAway = logDistanceAway.get();
+
+ /* distance, height */
+  InterpolatingDoubleTreeMap downtownPowerMap = new InterpolatingDoubleTreeMap(); // Add a position later
+  InterpolatingDoubleTreeMap downtownAngleMap = new InterpolatingDoubleTreeMap(); // Add a position later
 
   private final double maxHoodVoltage;
 
   private boolean onlyOnChange = false;
 
   private boolean isZeroingDone = false;
+  
+  private boolean changeOnce = true;
 
   public ShooterSubsystem() {
 
@@ -116,9 +126,20 @@ public class ShooterSubsystem extends SubsystemBase {
     maxHoodVoltage = 1;
     
     isZeroingDone = false;
-
+    addDataToMap();
   }
 
+  public void addDataToMap() {
+    downtownPowerMap.put(.9017, 4.85);
+    downtownAngleMap.put(.9017, 4.15);
+
+    downtownPowerMap.put(1.1557, 5.15);
+    downtownAngleMap.put(1.1557, 4.5);
+
+    downtownPowerMap.put(2.9845, 7.7);
+    downtownAngleMap.put(2.9845, 1.4);
+
+  }
   private void configureShooterMotors() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -223,6 +244,10 @@ public class ShooterSubsystem extends SubsystemBase {
     //   currentAngleState = AngleState.STORING;
     //   isZeroingDone = zeroEncoder();
     // }
+    if(changeOnce) {
+      updateShooterValues(getDistance());
+      changeOnce = false;
+    }
     applyState();
     publishLogs();
     shooterReady();
@@ -235,7 +260,7 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case SHOOTING:
-        motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
+        motorWheelLeader.setVoltage(voltageSetpoint);//vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
 
         wheelsSpunUp = rpmWithinTolerance();
         break;
@@ -276,7 +301,7 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", angleSetpoint);
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/VelocitySetpoint", velocitySetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/VoltageSetpoint", voltageSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
@@ -288,6 +313,11 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /* --------------- Calculations --------------- */
+
+  public void updateShooterValues(double distance) {
+    angleSetpoint = MathUtil.clamp(downtownAngleMap.get(distance), 0, 4.53);
+    voltageSetpoint = MathUtil.clamp(downtownPowerMap.get(distance), 0, 12);
+  }
 
   /**
    * uses a default tolerance
@@ -303,13 +333,13 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return if withing tolerance
    */
   private boolean rpmWithinTolerance(double tolerance) {
-    return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
+    return Math.abs(voltageSetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
   }
 
   /* --------------- Setters --------------- */
 
   public void setVelocitySetpoint(double setpoint) {
-    velocitySetpoint = setpoint;
+    voltageSetpoint = setpoint;
   }
 
   public void setShooterAngleSetpoint(double setpoint) {
@@ -346,16 +376,22 @@ public class ShooterSubsystem extends SubsystemBase {
     double lVKPVal = logVKP.get();
     double lVKFFVal = logVKFF.get();
 
+    double lvelocitySetpoint = logVelocitySetpoint.get();
+    double lDistanceAway = logDistanceAway.get();
     updateOuttakeVals = (vKS != lVKSVal)
                      || (vKV != lVKVVal)
                      || (vKP != lVKPVal)
-                     || (vKFF != lVKFFVal);
+                     || (vKFF != lVKFFVal)
+                     || (voltageSetpoint != lvelocitySetpoint)
+                     || (distanceAway != lDistanceAway);
 
     if (updateOuttakeVals) {
       vKS = lVKSVal;
       vKV = lVKVVal;
       vKP = lVKPVal;
       vKFF = lVKFFVal;
+      voltageSetpoint = lvelocitySetpoint;
+      distanceAway = lDistanceAway;
       updateShooterVelocityConstants();
     }
 
@@ -408,6 +444,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /* --------------- Getters -------------- */
+
+  public double getDistance() {
+    return distanceAway;
+  }
 
   public boolean shooterReady () {
     // if(wheelsSpunUp && angleAtSetpoint()) {

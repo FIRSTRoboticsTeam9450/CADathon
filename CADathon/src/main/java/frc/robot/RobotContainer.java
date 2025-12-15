@@ -48,7 +48,7 @@ public class RobotContainer {
   public BezierCurve rotateBezier = new BezierCurve("rotate", 120.1, 0.145, 92.2, 0.362, 0.035, 0.03);
 
   //These 2 should not change unless if something in Tuner constants change, EX: Different swerve modules / gear ratios
-  private static final double DEFAULT_MAX_SPEED = 5.14; //Value comes from kSpeedAt12Volts in tuner Constants
+  private static final double DEFAULT_MAX_SPEED = 1.14; //Value comes from kSpeedAt12Volts in tuner Constants used to be 5.14
   private static final double DEFAULT_MAX_ANGULAR_RATE = RotationsPerSecond.of(1.125).in(RadiansPerSecond); // Unsure of how this value was aquired, but was copied from Reefscape, recover2 branch
 
   // If you need to modify max speeds, this is most likely the one you want

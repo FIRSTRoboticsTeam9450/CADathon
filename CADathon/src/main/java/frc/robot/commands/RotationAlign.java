@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.util.BezierCurve;
@@ -14,7 +15,7 @@ import frc.robot.util.BezierCurve;
 public class RotationAlign extends Command{
 
     private CommandSwerveDrivetrain drive;
-    private VisionSubsystem vision = VisionSubsystem.getInstance();
+    private VisionSubsystem vision;
 
     private CommandXboxController controller;
     private BezierCurve bezierCurve;
@@ -32,6 +33,8 @@ public class RotationAlign extends Command{
         this.controller = controller;
         this.bezierCurve = bezierCurve;
         this.maxSpeed = maxSpeed;
+
+        vision = RobotContainer.vision;
         
         currentPose = drive.getState().Pose;
 

@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -36,8 +37,7 @@ import frc.robot.util.BezierCurve;
 public class RobotContainer {
 
   public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-  @SuppressWarnings("unused")
-  private final VisionSubsystem vision;
+  public final static VisionSubsystem vision = VisionSubsystem.getInstance(drivetrain);
   private final CoordinationSubsystem coordSub;
   private final ShooterSubsystem shooterSub;
   private final IntakeSubsystem intakeSub;
@@ -48,7 +48,7 @@ public class RobotContainer {
   public BezierCurve rotateBezier = new BezierCurve("rotate", 120.1, 0.145, 92.2, 0.362, 0.035, 0.03);
 
   //These 2 should not change unless if something in Tuner constants change, EX: Different swerve modules / gear ratios
-  private static final double DEFAULT_MAX_SPEED = 1.14; //Value comes from kSpeedAt12Volts in tuner Constants used to be 5.14
+  private static final double DEFAULT_MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   private static final double DEFAULT_MAX_ANGULAR_RATE = RotationsPerSecond.of(1.125).in(RadiansPerSecond); // Unsure of how this value was aquired, but was copied from Reefscape, recover2 branch
 
   // If you need to modify max speeds, this is most likely the one you want
@@ -67,7 +67,6 @@ public class RobotContainer {
    */
   public RobotContainer() {
     System.out.println(drivetrain + " I PUT DRIVE TRAIN IN");
-    vision = VisionSubsystem.getInstance(drivetrain);
     coordSub = CoordinationSubsystem.getInstance();
     shooterSub = ShooterSubsystem.getInstance();
     intakeSub = IntakeSubsystem.getInstance();

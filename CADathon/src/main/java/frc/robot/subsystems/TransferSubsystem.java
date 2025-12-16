@@ -47,7 +47,7 @@ public class TransferSubsystem extends SubsystemBase {
 
   private boolean detectedSpeech;
   private Timer timer = new Timer();
-  private boolean runFoward = false;
+  private boolean runForward = false;
 
   public TransferSubsystem() {
     configureTower();
@@ -99,8 +99,8 @@ public class TransferSubsystem extends SubsystemBase {
 
     Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
     //detectedSpeech = ;
-    if(!getCANRangeTriggered()) {
-      runFoward = false;
+    if(!getCANRangeTriggered() && currentState == transferStates.STORING) {
+      runForward = false;
     }
     applyStates();
     publishLogs();
@@ -122,31 +122,29 @@ public class TransferSubsystem extends SubsystemBase {
 
       case INTAKING:
         hopperVoltage = 3;
-        if (getCANRangeTriggered() && !runFoward) {
-          towerVoltage = 0.1;
-          timer.reset();
-          timer.start();
-          runFoward = true;
+        if (getCANRangeTriggered() && !runForward) {
+          towerVoltage = 0.75;
+          timer.restart();
+          runForward = true;
         } else if (runFowardDone()) {
           towerVoltage = 0;
           timer.stop();
-        } else if(!runFoward){
-          towerVoltage = 0.75;
+        } else if(!runForward){
+          towerVoltage = 1;
         }
         break;
       
       case PREPARING_FOR_SHOT:
         hopperVoltage = 4;
-        if (getCANRangeTriggered() && !runFoward) {
-          towerVoltage = 0.1;
-          timer.reset();
-          timer.start();
-          runFoward = true;
+        if (getCANRangeTriggered() && !runForward) {
+          towerVoltage = 0.75;
+          timer.restart();
+          runForward = true;
         } else if (runFowardDone()) {
           towerVoltage = 0;
           timer.stop();
-        } else if(!runFoward){
-          towerVoltage = 0.75;
+        } else if(!runForward){
+          towerVoltage = 1;
         }
         break;
 
@@ -176,7 +174,7 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   public boolean runFowardDone() {
-    if(timer.get() > .1) {
+    if(timer.get() > 1.5) {
       return true;
     }
     return false;

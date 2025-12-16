@@ -86,10 +86,10 @@ public class ShooterSubsystem extends SubsystemBase {
   private DynamicMotionMagicVoltage mmRequest;
 
   private LoggedNetworkNumber logVKS = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kS", 0.1);
-  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.15);
+  private LoggedNetworkNumber logVKV = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kV", 0.1);
   private LoggedNetworkNumber logVKA = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kA", 0.01);
-  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.5);
-  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 0);
+  private LoggedNetworkNumber logVKP = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kP", 0.6);
+  private LoggedNetworkNumber logVKFF = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/kFF", 1);
   private LoggedNetworkNumber logVAccel = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Acceleration", 100);
   private LoggedNetworkNumber logVJerk = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Jerk", 4000);
   private double vKS = logVKS.get();
@@ -101,9 +101,9 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vJerk = logVJerk.get();
   private final int vSlot = 0;
   private final MotionMagicVelocityVoltage vRequest;
-  private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage", 4); // used to be 45
+  private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage Setpoint", 4); // used to be 45
   private double voltageSetpoint = logVoltageSetpoint.get();
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage", 4); // used to be 45
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
   private double velocitySetpoint = logVelocitySetpoint.get();
 
   private LoggedNetworkNumber logDistanceAway = new LoggedNetworkNumber("/Tuning/Shooter/Distance", 1);
@@ -259,12 +259,13 @@ public class ShooterSubsystem extends SubsystemBase {
     //   currentAngleState = AngleState.STORING;
     //   isZeroingDone = zeroEncoder();
     // }
-    if(changeOnce) {
-      updateShooterValues(getDistance());
-      changeOnce = false;
-    }
+    // if(changeOnce) {
+    //   updateShooterValues(getDistance());
+    //   changeOnce = false;
+    // }
     applyState();
     publishLogs();
+    wheelsSpunUp = rpmWithinTolerance();
     shooterReady();
   }
 
@@ -275,9 +276,7 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case SHOOTING:
-        motorWheelLeader.setVoltage(voltageSetpoint);//vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
-
-        wheelsSpunUp = rpmWithinTolerance();
+        motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
         break;
 
       case IDLING:
@@ -348,7 +347,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return if withing tolerance
    */
   private boolean rpmWithinTolerance(double tolerance) {
-    return Math.abs(voltageSetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
+    return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
   }
 
   /* --------------- Setters --------------- */

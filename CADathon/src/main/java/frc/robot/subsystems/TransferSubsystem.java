@@ -40,7 +40,8 @@ public class TransferSubsystem extends SubsystemBase {
 
   /* ---------- Devices ---------- */
   private TalonFX motorTowerWheels = new TalonFX(TransferConstants.TOWER_MOTOR_ID, RobotConstants.CANIVORE_BUS);
-  private TalonFX motorSideRollers = new TalonFX(TransferConstants.SIDE_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorRightSideRollers = new TalonFX(TransferConstants.RIGHT_SIDE_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
+  private TalonFX motorLeftSideRollers = new TalonFX(TransferConstants.LEFT_SIDE_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorBottomRollers = new TalonFX(TransferConstants.BOTTOM_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
 
@@ -85,8 +86,12 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
-    motorSideRollers.getConfigurator().apply(motorConfig);
+    motorRightSideRollers.getConfigurator().apply(motorConfig);
     motorBottomRollers.getConfigurator().apply(motorConfig);
+
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    motorLeftSideRollers.getConfigurator().apply(motorConfig);
   }
   
   @Override
@@ -97,7 +102,8 @@ public class TransferSubsystem extends SubsystemBase {
     if(!getCANRangeTriggered()) {
       runFoward = false;
     }
-      applyStates();
+    applyStates();
+    publishLogs();
 
     Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", getCANRangeTriggered());
     
@@ -164,7 +170,8 @@ public class TransferSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Transfer/Debugging/Tower Voltage", towerVoltage);
 
     motorBottomRollers.setVoltage(hopperVoltage);
-    motorSideRollers.setVoltage(hopperVoltage);
+    motorRightSideRollers.setVoltage(hopperVoltage);
+    motorLeftSideRollers.setVoltage(hopperVoltage);
     motorTowerWheels.setVoltage(towerVoltage);
   }
 

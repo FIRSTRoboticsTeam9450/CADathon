@@ -71,8 +71,9 @@ public final class Constants {
     public static class TransferConstants {
 
       public static final int TOWER_MOTOR_ID = 27;
-      public static final int SIDE_ROLLERS_MOTOR_ID = 26;
+      public static final int RIGHT_SIDE_ROLLERS_MOTOR_ID = 26;
       public static final int BOTTOM_ROLLERS_MOTOR_ID = 25;
+      public static final int LEFT_SIDE_ROLLERS_MOTOR_ID = 24;
       public static final int TOWER_CANRANGE_ID = 28;
 
     }

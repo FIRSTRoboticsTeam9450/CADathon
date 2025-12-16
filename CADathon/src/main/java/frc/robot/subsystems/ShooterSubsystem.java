@@ -100,9 +100,11 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vAccel = logVAccel.get();
   private double vJerk = logVJerk.get();
   private final int vSlot = 0;
-  private final VelocityVoltage vRequest;
+  private final MotionMagicVelocityVoltage vRequest;
+  private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage", 4); // used to be 45
+  private double voltageSetpoint = logVoltageSetpoint.get();
   private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage", 4); // used to be 45
-  private double voltageSetpoint = logVelocitySetpoint.get();
+  private double velocitySetpoint = logVelocitySetpoint.get();
 
   private LoggedNetworkNumber logDistanceAway = new LoggedNetworkNumber("/Tuning/Shooter/Distance", 1);
   private double distanceAway = logDistanceAway.get();
@@ -117,7 +119,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private boolean isZeroingDone = false;
   
-  private boolean changeOnce = true;
+  public boolean changeOnce = true;
 
   public ShooterSubsystem() {
 
@@ -392,8 +394,8 @@ public class ShooterSubsystem extends SubsystemBase {
     double lVAccel = logVAccel.get();
     double lVJerk = logVJerk.get();
     double lVVSVal = logVelocitySetpoint.get();
-
-    double lvelocitySetpoint = logVelocitySetpoint.get();
+    double lVoltageSetpoint = logVoltageSetpoint.get();
+    
     double lDistanceAway = logDistanceAway.get();
     updateOuttakeVals = (vKS != lVKSVal)
                      || (vKV != lVKVVal)
@@ -402,9 +404,9 @@ public class ShooterSubsystem extends SubsystemBase {
                      || (vKFF != lVKFFVal)
                      || (vAccel != lVAccel)
                      || (vJerk != lVJerk)
-                     || (velocitySetpoint != lVVSVal);
+                     || (velocitySetpoint != lVVSVal)
                      || (vKFF != lVKFFVal)
-                     || (voltageSetpoint != lvelocitySetpoint)
+                     || (voltageSetpoint != lVoltageSetpoint)
                      || (distanceAway != lDistanceAway);
 
     if (updateOuttakeVals) {

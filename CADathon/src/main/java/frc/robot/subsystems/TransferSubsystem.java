@@ -111,23 +111,28 @@ public class TransferSubsystem extends SubsystemBase {
 
   private void applyStates() {
     
-    double hopperVoltage = 0;
+    double hopperBottomVoltage = 0;
+    double hopperSideVoltage = 0;
     double towerVoltage = 0;
 
     switch (currentState) {
       case STORING:
-        hopperVoltage = 0;
+        hopperBottomVoltage = 0;
+        hopperSideVoltage = 0;
         towerVoltage = 0;
         break;
 
       case INTAKING:
-        hopperVoltage = 3;
+        hopperBottomVoltage = 3;
+        hopperSideVoltage = 3;
         if (getCANRangeTriggered() && !runForward) {
           towerVoltage = 0.75;
           timer.restart();
           runForward = true;
         } else if (runFowardDone()) {
+          hopperBottomVoltage = 1;
           towerVoltage = 0;
+          hopperSideVoltage = 0;
           timer.stop();
         } else if(!runForward){
           towerVoltage = 1;
@@ -135,13 +140,15 @@ public class TransferSubsystem extends SubsystemBase {
         break;
       
       case PREPARING_FOR_SHOT:
-        hopperVoltage = 4;
+        hopperBottomVoltage = 4;
+        hopperSideVoltage = 4;
         if (getCANRangeTriggered() && !runForward) {
           towerVoltage = 0.75;
           timer.restart();
           runForward = true;
         } else if (runFowardDone()) {
           towerVoltage = 0;
+          hopperSideVoltage = 0;
           timer.stop();
         } else if(!runForward){
           towerVoltage = 1;
@@ -149,32 +156,35 @@ public class TransferSubsystem extends SubsystemBase {
         break;
 
       case FEEDING:
-        hopperVoltage = 4;
-        towerVoltage = 4;
+        hopperBottomVoltage = 6;
+        hopperSideVoltage = 6;
+        towerVoltage = 6;
         break;
 
       case REJECTING:
-        hopperVoltage = -3;
+        hopperBottomVoltage = -3;
+        hopperSideVoltage = -3;
         towerVoltage = -1;
         break;
 
       default:
-        hopperVoltage = 0;
+        hopperBottomVoltage = 0;
+        hopperSideVoltage = 0;
         towerVoltage = 0;
         break;
     }
     
-    Logger.recordOutput("HeroHeist/Transfer/Debugging/Hopper Voltage", hopperVoltage);
+    Logger.recordOutput("HeroHeist/Transfer/Debugging/Hopper Voltage", hopperBottomVoltage);
     Logger.recordOutput("HeroHeist/Transfer/Debugging/Tower Voltage", towerVoltage);
 
-    motorBottomRollers.setVoltage(hopperVoltage);
-    motorRightSideRollers.setVoltage(hopperVoltage);
-    motorLeftSideRollers.setVoltage(hopperVoltage);
+    motorBottomRollers.setVoltage(hopperBottomVoltage);
+    motorRightSideRollers.setVoltage(hopperSideVoltage);
+    motorLeftSideRollers.setVoltage(hopperSideVoltage);
     motorTowerWheels.setVoltage(towerVoltage);
   }
 
   public boolean runFowardDone() {
-    if(timer.get() > 1.5) {
+    if(timer.get() > 2) {
       return true;
     }
     return false;

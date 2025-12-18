@@ -140,21 +140,13 @@ public class RobotContainer {
 
 
     DRIVER.povUp()
-          .whileTrue(
-           new InstantCommand(() -> shooterSub.setWantedState(AngleState.AIMING, ShooterState.IDLING))
-            .alongWith(new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3)))
+          .onTrue(
+           new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3))
           );
 
     DRIVER.povDown()
-          .whileTrue(
-            new InstantCommand(() -> shooterSub.setWantedState(AngleState.AIMING, ShooterState.IDLING))
-            .alongWith(new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
-          );
-
-    DRIVER.povDown()
-          .or(DRIVER.povUp())
-          .onFalse(
-            new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
+          .onTrue(
+            new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0))
           );
 
     DRIVER.start().onTrue(

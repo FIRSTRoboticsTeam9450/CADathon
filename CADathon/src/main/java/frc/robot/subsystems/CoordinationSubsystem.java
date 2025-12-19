@@ -43,6 +43,8 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     private ScoringLocation wantedScoringLocation = ScoringLocation.DOWNTOWN;
 
+    private boolean intakeRaise = true;
+
     public CoordinationSubsystem() {
     }
 
@@ -74,13 +76,18 @@ public class CoordinationSubsystem extends SubsystemBase{
                 
             case STORING:
                 transferState = transferStates.STORING;
-                intakeState = intakePos.STORE;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.IDLING;
                 shooterAngleState = AngleState.IDLING;
                 break;
             
             case INTAKING_SPEECH:
+                intakeRaise = false;
                 transferState = transferStates.INTAKING;
                 intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
@@ -98,7 +105,11 @@ public class CoordinationSubsystem extends SubsystemBase{
             
             case PREPARING_FOR_SHOT:
                 transferState = transferStates.PREPARING_FOR_SHOT;
-                intakeState = intakePos.STORE;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.SHOOTING;
                 shooterAngleState = AngleState.IDLING;
@@ -114,7 +125,11 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case SHOOT_STORY:
                 transferState = transferStates.STORING;
-                intakeState = intakePos.STORE;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.IDLING;
                 shooterAngleState = AngleState.IDLING;
@@ -145,6 +160,7 @@ public class CoordinationSubsystem extends SubsystemBase{
         Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Current State", currentState);
         Logger.recordOutput("HeroHeist/Coordination/Wanted Scoring Type", wantedScoringLocation);
+        Logger.recordOutput("HeroHeist/Coordination/Should Intake Raise", intakeRaise);
     }
 
     public void setState(AbsoluteStates wantedState) {
@@ -161,6 +177,14 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public Command setScoringLocationCommand(ScoringLocation location) {
         return new InstantCommand(() -> setScoringLocation(location));
+    }
+
+    private void setDoesIntakeRaise(boolean value) {
+        intakeRaise = value;
+    }
+
+    public Command setDoesIntakeRaiseCommand(boolean value) {
+        return new InstantCommand(() -> setDoesIntakeRaise(value));
     }
 
     public ScoringLocation getScoringLocation() {

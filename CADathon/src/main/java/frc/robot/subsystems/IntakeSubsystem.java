@@ -270,9 +270,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getPosition(intakePos pos) {
     switch (pos) {
       case STORE:
-        return 3.25;
+        return 2.4;
       case SPEECH_BUBBLES_INTAKE:
-        return 0.7;
+        return 0.4;
       case STORY_BOARDS_INTAKE:
         return 0;
       case STORY_BOARDS_SCORE:

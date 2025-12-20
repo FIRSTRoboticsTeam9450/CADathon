@@ -324,8 +324,6 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/(Leader) Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Shooter/Wheels/(Follower) Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Spun Up", wheelsSpunUp);
 
   }

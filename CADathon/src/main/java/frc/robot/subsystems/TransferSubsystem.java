@@ -157,8 +157,8 @@ public class TransferSubsystem extends SubsystemBase {
 
       case FEEDING:
         hopperBottomVoltage = 6;
-        hopperSideVoltage = -6;
-        towerVoltage = 6;
+        hopperSideVoltage = 6;
+        towerVoltage = 12;
         break;
 
       case REJECTING:

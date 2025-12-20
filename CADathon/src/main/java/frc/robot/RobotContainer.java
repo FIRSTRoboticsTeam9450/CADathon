@@ -150,6 +150,10 @@ public class RobotContainer {
 
     DRIVER.start().onTrue(
       new InstantCommand(() -> new ResetIMU(drivetrain))
+      );
+
+    DRIVER.povRight().onTrue(
+      coordSub.setDoesIntakeRaiseCommand(true)
     );
 
 

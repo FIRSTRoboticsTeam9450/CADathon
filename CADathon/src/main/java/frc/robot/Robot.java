@@ -70,7 +70,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledPeriodic() {
-    shooterSub.changeOnce = true;
     shooterSub.updateShooterConstants();
     intakeSub.updateConstants();
     if (DRIVER.back().getAsBoolean()) {

@@ -107,7 +107,6 @@ public class RobotContainer {
           ).onFalse(
             coordSub.setStateCommand(AbsoluteStates.STORING)
           );
-    
     DRIVER.leftBumper()
           .onTrue(
             coordSub.setStateCommand(AbsoluteStates.INTAKING_STORY)

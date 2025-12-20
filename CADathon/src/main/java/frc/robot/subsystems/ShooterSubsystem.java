@@ -101,10 +101,12 @@ public class ShooterSubsystem extends SubsystemBase {
   private double vJerk = logVJerk.get();
   private final int vSlot = 0;
   private final MotionMagicVelocityVoltage vRequest;
-  private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage Setpoint", 4); // used to be 45
-  private double voltageSetpoint = logVoltageSetpoint.get();
+  //private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage Setpoint", 4); // used to be 45
+  private double voltageSetpoint = 0;//logVoltageSetpoint.get();
   private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
   private double velocitySetpoint = logVelocitySetpoint.get();
+
+  private double aimingSetpoint = 0;
 
   private LoggedNetworkNumber logDistanceAway = new LoggedNetworkNumber("/Tuning/Shooter/Distance", 1);
   private double distanceAway = logDistanceAway.get();
@@ -259,12 +261,12 @@ public class ShooterSubsystem extends SubsystemBase {
     //   currentAngleState = AngleState.STORING;
     //   isZeroingDone = zeroEncoder();
     // }
-    // if(changeOnce) {
-    //   updateShooterValues(getDistance());
-    //   changeOnce = false;
-    // }
-    applyState();
+    if(changeOnce) {
+      updateShooterValues(getDistance());
+      changeOnce = false;
+    }
     publishLogs();
+    applyState();
     wheelsSpunUp = rpmWithinTolerance();
     shooterReady();
   }
@@ -277,6 +279,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
       case SHOOTING:
         motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
+        //motorWheelLeader.setControl(new VoltageOut(voltageSetpoint));
         break;
 
       case IDLING:
@@ -304,7 +307,7 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case AIMING:
-        motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
+        motorAngle.setControl(mmRequest.withPosition(aimingSetpoint));
         break;
     }
   }
@@ -314,8 +317,9 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Hood/Current State", currentAngleState);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
-    Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", angleSetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", aimingSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/VoltageSetpoint", voltageSetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/VelocitySetpoint", velocitySetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
@@ -329,7 +333,7 @@ public class ShooterSubsystem extends SubsystemBase {
   /* --------------- Calculations --------------- */
 
   public void updateShooterValues(double distance) {
-    angleSetpoint = MathUtil.clamp(downtownAngleMap.get(distance), 0, 4.53);
+    aimingSetpoint = MathUtil.clamp(downtownAngleMap.get(distance), 0, 4.53);
     voltageSetpoint = MathUtil.clamp(downtownPowerMap.get(distance), 0, 12);
   }
 
@@ -338,7 +342,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return
    */
   private boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(2); // used to be .5 got to tune it more
+    return rpmWithinTolerance(2); // used to be 2 for velocity got to tune it more
   }
 
   /**
@@ -347,6 +351,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return if withing tolerance
    */
   private boolean rpmWithinTolerance(double tolerance) {
+    //return Math.abs(voltageSetpoint - motorWheelLeader.getMotorVoltage().getValueAsDouble()) < tolerance;
     return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
   }
 
@@ -393,7 +398,7 @@ public class ShooterSubsystem extends SubsystemBase {
     double lVAccel = logVAccel.get();
     double lVJerk = logVJerk.get();
     double lVVSVal = logVelocitySetpoint.get();
-    double lVoltageSetpoint = logVoltageSetpoint.get();
+    //double lVoltageSetpoint = logVoltageSetpoint.get();
     
     double lDistanceAway = logDistanceAway.get();
     updateOuttakeVals = (vKS != lVKSVal)
@@ -405,7 +410,7 @@ public class ShooterSubsystem extends SubsystemBase {
                      || (vJerk != lVJerk)
                      || (velocitySetpoint != lVVSVal)
                      || (vKFF != lVKFFVal)
-                     || (voltageSetpoint != lVoltageSetpoint)
+                     //|| (voltageSetpoint != lVoltageSetpoint)
                      || (distanceAway != lDistanceAway);
 
     if (updateOuttakeVals) {
@@ -414,6 +419,9 @@ public class ShooterSubsystem extends SubsystemBase {
       vKA =lVKAVal;
       vKP = lVKPVal;
       vKFF = lVKFFVal;
+      distanceAway = lDistanceAway;
+      velocitySetpoint = lVVSVal;
+      changeOnce = true;
       updateShooterVelocityConstants();
     }
 
@@ -472,17 +480,14 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public boolean shooterReady () {
-    // if(wheelsSpunUp && angleAtSetpoint()) {
-    //   return true;
-    // }
-    if (wheelsSpunUp) {
+    if(wheelsSpunUp) {// && angleAtSetpoint()) {
       return true;
     }
     return false;
   }
 
   public boolean angleAtSetpoint() {
-    return false;
+    return Math.abs(motorAngle.getPosition().getValueAsDouble() - angleSetpoint) < .05;
   }
 
   public static ShooterSubsystem getInstance() {

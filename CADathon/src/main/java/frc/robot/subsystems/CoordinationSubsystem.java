@@ -83,7 +83,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.IDLING;
+                shooterAngleState = AngleState.AIMING;
                 break;
             
             case INTAKING_SPEECH:
@@ -92,7 +92,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.IDLING;
+                shooterAngleState = AngleState.AIMING;
                 break;
             
             case INTAKING_STORY:
@@ -100,7 +100,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.STORY_BOARDS_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.IDLING;
+                shooterAngleState = AngleState.AIMING;
                 break;
             
             case PREPARING_FOR_SHOT:
@@ -112,7 +112,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.IDLING;
+                shooterAngleState = AngleState.AIMING;
                 break;
 
             case SHOOTING_SPEECH:
@@ -120,7 +120,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.STORE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.IDLING; // Used to be aiming
+                shooterAngleState = AngleState.AIMING; // Used to be aiming
                 break;
 
             case SHOOT_STORY:

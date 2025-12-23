@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -63,7 +64,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private double kI = logMMKI.get(); // no output for integrated error 0
   private double kD = logMMKD.get(); // A velocity error of 1 rps results in 0.1 V output 0.1 - Can help correct kV and kA error
   private double kG = logMMKG.get();
-  
   private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
   private intakePos currentPos = intakePos.ZERO;
@@ -140,7 +140,8 @@ public class IntakeSubsystem extends SubsystemBase {
     slot0.kG = kG;
 
     motorConfig.Slot0 = slot0;
-
+    motorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+    
     motorPivot.getConfigurator().apply(motorConfig);
   }
   

@@ -11,6 +11,7 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontLeft;
 import frc.robot.Constants.RobotConstants.LimeLightConstants.FrontRight;
+import frc.robot.Constants.RobotConstants.LimeLightConstants.Pillar;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
 import frc.robot.Constants.RobotConstants.TargetConstants;
 import frc.robot.subsystems.CoordinationSubsystem.ScoringLocation;
@@ -82,6 +83,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final List<LimelightObject> limelightList = new ArrayList<>();
     private LimelightObject limelightFL; // Front-left camera
     private LimelightObject limelightFR; // Front-right camera
+    private LimelightObject limelightP;
 
     // Logging
     private volatile double lastFLConfidence = 0.0; // Last confidence reading from front-left camera
@@ -129,8 +131,20 @@ public class VisionSubsystem extends SubsystemBase {
                 .withOffsetYaw(FrontRight.YAW);
         limelightFR.location = Location.FRONT_RIGHT;
 
-        limelightList.add(limelightFL);
-        limelightList.add(limelightFR);
+        limelightP = new LimelightObject(Pillar.NAME)
+                .withOffsetX(Pillar.LOCATION_X)
+                .withOffsetY(Pillar.LOCATION_Y)
+                .withOffsetZ(Pillar.LOCATION_Z)
+                .withOffsetPitch(Pillar.PITCH)
+                .withOffsetRoll(Pillar.ROLL)
+                .withOffsetYaw(Pillar.YAW);
+        limelightP.location = Location.PILLAR;
+
+
+
+        // limelightList.add(limelightFL);
+        // limelightList.add(limelightFR);
+        limelightList.add(limelightP);
     }
 
     /**
@@ -139,7 +153,7 @@ public class VisionSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        // updateVision();  // Compute fused vision pose
+        updateVision();  // Compute fused vision pose
         // publishLogs();   // Print/log fusion confidence and pose
     }
 
@@ -151,37 +165,51 @@ public class VisionSubsystem extends SubsystemBase {
      * Updates pose estimates from both Limelight cameras and fuses them.
      * Sends fused pose to drivetrain for odometry correction.
      */
+    // private void updateVision() {
+    //     // Get robot yaw from drivetrain's Pigeon2 sensor, applying offset
+    //     double robotYaw = drivetrain.getPigeon2().getYaw().getValueAsDouble() - RobotContainer.pigeonOffset;
+
+    //     // Update each Limelight with current robot yaw
+    //     LimelightHelpers.SetRobotOrientation(limelightFL.getName(), robotYaw, 0, 0, 0, 0, 0);
+    //     LimelightHelpers.PoseEstimate peFL = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFL.getName());
+    //     lastFLPose = peFL.pose;
+
+    //     LimelightHelpers.SetRobotOrientation(limelightFR.getName(), robotYaw, 0, 0, 0, 0, 0);
+    //     LimelightHelpers.PoseEstimate peFR = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFR.getName());
+    //     lastFRPose = peFR.pose;
+
+    //     // Convert raw Limelight data into VisionMeasurement objects
+    //     VisionMeasurement vmFL = createVisionMeasurement(peFL, limelightFL.getName());
+    //     VisionMeasurement vmFR = createVisionMeasurement(peFR, limelightFR.getName());
+
+    //     // Update logging confidence values
+    //     lastFLConfidence = vmFL.confidence;
+    //     lastFRConfidence = vmFR.confidence;
+
+    //     // Fuse camera measurements
+    //     Optional<Pose2d> fusedPose = fuseVision(vmFL, vmFR);
+
+    //     // If valid, update lastVisionPose and send to drivetrain
+    //     fusedPose.ifPresent(pose -> {
+    //         lastVisionPose = pose;
+    //         lastFusedPose = pose;
+    //         lastVisionTimestamp = Math.max(vmFL.timestamp, vmFR.timestamp);
+    //         drivetrain.addVisionMeasurement(pose, lastVisionTimestamp);
+    //     });
+    // }
+
     private void updateVision() {
-        // Get robot yaw from drivetrain's Pigeon2 sensor, applying offset
         double robotYaw = drivetrain.getPigeon2().getYaw().getValueAsDouble() - RobotContainer.pigeonOffset;
+        LimelightHelpers.SetRobotOrientation(limelightP.getName(), robotYaw, 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate peP = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightP.getName());
 
-        // Update each Limelight with current robot yaw
-        LimelightHelpers.SetRobotOrientation(limelightFL.getName(), robotYaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate peFL = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFL.getName());
-        lastFLPose = peFL.pose;
+        if (peP.tagCount != 0) {
+            lastVisionPose = peP.pose;
 
-        LimelightHelpers.SetRobotOrientation(limelightFR.getName(), robotYaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate peFR = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightFR.getName());
-        lastFRPose = peFR.pose;
+            Logger.recordOutput("HeroHeist/Vision/Pose", lastVisionPose);
 
-        // Convert raw Limelight data into VisionMeasurement objects
-        VisionMeasurement vmFL = createVisionMeasurement(peFL, limelightFL.getName());
-        VisionMeasurement vmFR = createVisionMeasurement(peFR, limelightFR.getName());
-
-        // Update logging confidence values
-        lastFLConfidence = vmFL.confidence;
-        lastFRConfidence = vmFR.confidence;
-
-        // Fuse camera measurements
-        Optional<Pose2d> fusedPose = fuseVision(vmFL, vmFR);
-
-        // If valid, update lastVisionPose and send to drivetrain
-        fusedPose.ifPresent(pose -> {
-            lastVisionPose = pose;
-            lastFusedPose = pose;
-            lastVisionTimestamp = Math.max(vmFL.timestamp, vmFR.timestamp);
-            drivetrain.addVisionMeasurement(pose, lastVisionTimestamp);
-        });
+            drivetrain.addVisionMeasurement(peP.pose, lastVisionTimestamp);
+        }
     }
 
     /**

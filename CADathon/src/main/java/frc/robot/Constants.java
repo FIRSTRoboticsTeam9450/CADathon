@@ -53,6 +53,16 @@ public final class Constants {
         public static final double YAW = 37.5; 
       }
 
+      public static class Pillar {
+        public static final String NAME = "limelight-pillar";
+        public static final double LOCATION_X = -0.2159;
+        public static final double LOCATION_Y = -0.19005;
+        public static final double LOCATION_Z = 0.7299212;
+        public static final double PITCH = -5;
+        public static final double ROLL = 0;
+        public static final double YAW = 0;
+      }
+
     }
 
     /**

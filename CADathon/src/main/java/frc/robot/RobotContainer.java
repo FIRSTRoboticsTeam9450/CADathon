@@ -139,21 +139,38 @@ public class RobotContainer {
 
 
     DRIVER.povUp()
-          .onTrue(
-           new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3))
+          .whileTrue(
+            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
+            .andThen(
+              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3)))
+          ).onFalse(
+           new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
           );
 
     DRIVER.povDown()
-          .onTrue(
-            new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0))
+          .whileTrue(
+            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
+            .andThen(
+              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
           );
+    
 
-    DRIVER.start().onTrue(
-      new InstantCommand(() -> new ResetIMU(drivetrain))
+    DRIVER.povLeft()
+          .onTrue(
+            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
+            .andThen(
+              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
+          );
+    
+
+    DRIVER.y().onTrue(
+      new ResetIMU(drivetrain)
       );
 
     DRIVER.povRight().onTrue(
-      coordSub.setDoesIntakeRaiseCommand(true)
+      coordSub.setStateCommand(AbsoluteStates.REJECTING)
+    ).onFalse(
+      coordSub.setStateCommand(AbsoluteStates.STORING)
     );
 
 

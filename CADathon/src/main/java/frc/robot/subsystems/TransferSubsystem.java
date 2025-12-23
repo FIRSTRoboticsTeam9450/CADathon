@@ -62,9 +62,9 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
+    //motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
-    motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
+    //motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
     canrangeConfig.ProximityParams.ProximityThreshold = 0.07; // meters, 0.15 is roughly half way, which is when we want to see the ball
@@ -86,12 +86,14 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
     motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
-    motorRightSideRollers.getConfigurator().apply(motorConfig);
     motorBottomRollers.getConfigurator().apply(motorConfig);
+    motorLeftSideRollers.getConfigurator().apply(motorConfig);
+    motorRightSideRollers.getConfigurator().apply(motorConfig);
 
     motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    motorLeftSideRollers.getConfigurator().apply(motorConfig);
+    
+    
   }
   
   @Override
@@ -156,9 +158,9 @@ public class TransferSubsystem extends SubsystemBase {
         break;
 
       case FEEDING:
-        hopperBottomVoltage = 6;
-        hopperSideVoltage = 6;
-        towerVoltage = 12;
+        hopperBottomVoltage = 4;
+        hopperSideVoltage = 4;
+        towerVoltage = 6;
         break;
 
       case REJECTING:
@@ -193,6 +195,7 @@ public class TransferSubsystem extends SubsystemBase {
   private void publishLogs() {
     Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
     Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
+    Logger.recordOutput("HeroHeist/Transfer/Tower/MotorVoltage", motorTowerWheels.getMotorVoltage().getValueAsDouble());
   }
 
   public void setWantedState(transferStates wantedState) {

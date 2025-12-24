@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
@@ -15,7 +16,7 @@ import frc.robot.util.BezierCurve;
 public class RotationAlign extends Command{
 
     private CommandSwerveDrivetrain drive;
-    private VisionSubsystem vision;
+    private VisionSubsystem vision = RobotContainer.vision;
 
     private CommandXboxController controller;
     private BezierCurve bezierCurve;
@@ -24,8 +25,8 @@ public class RotationAlign extends Command{
     private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric()
                                                                              .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private Pose2d currentPose;
-    private Pose2d target;
-    private PIDController rotationPID = new PIDController(5, 0, 0);
+    private Translation2d target;
+    private PIDController rotationPID = new PIDController(6, 0, 0);
     
     
     public RotationAlign(CommandSwerveDrivetrain drivetrain, CommandXboxController controller, BezierCurve bezierCurve, double maxSpeed) {
@@ -43,8 +44,9 @@ public class RotationAlign extends Command{
 
     @Override
     public void initialize() {
-        target = vision.getTargetPose();
-        currentPose = drive.getState().Pose;
+        target = vision.getRotationTarget();
+        // currentPose = drive.getState().Pose;
+        currentPose = vision.getLastVisionPose();
         double rotationTarget = calculateRotationAngleTarget();
 
         rotationPID.setSetpoint(rotationTarget);
@@ -52,7 +54,8 @@ public class RotationAlign extends Command{
 
     @Override
     public void execute() {
-        currentPose = drive.getState().Pose;
+        // currentPose = drive.getState().Pose;
+        currentPose = vision.getLastVisionPose();
 
         rotationPID.setSetpoint(calculateRotationAngleTarget());
         double power = rotationPID.calculate(currentPose.getRotation().getRadians());

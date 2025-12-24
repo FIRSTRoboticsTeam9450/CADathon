@@ -273,7 +273,7 @@ public class IntakeSubsystem extends SubsystemBase {
       case STORE:
         return 2.4;
       case SPEECH_BUBBLES_INTAKE:
-        return 0.4;
+        return 0.35;
       case STORY_BOARDS_INTAKE:
         return 0;
       case STORY_BOARDS_SCORE:

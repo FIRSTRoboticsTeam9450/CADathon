@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ResetIMU;
+import frc.robot.commands.RotationAlign;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoordinationSubsystem;
@@ -102,8 +103,9 @@ public class RobotContainer {
             coordSub.setStateCommand(AbsoluteStates.STORING)
           );
     DRIVER.rightTrigger()
-          .onTrue(
+          .whileTrue(
             coordSub.setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT)
+            .andThen(new RotationAlign(drivetrain, DRIVER, driveBezier, maxSpeed))
           ).onFalse(
             coordSub.setStateCommand(AbsoluteStates.STORING)
           );
@@ -137,35 +139,13 @@ public class RobotContainer {
     //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
     //       );
 
+    DRIVER.povLeft().onTrue(
+      coordSub.setDoesIntakeRaiseCommand(true)
+    );
 
-    DRIVER.povUp()
-          .whileTrue(
-            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
-            .andThen(
-              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(3)))
-          ).onFalse(
-           new InstantCommand(() -> shooterSub.setWantedState(AngleState.IDLING, ShooterState.IDLING))
-          );
-
-    DRIVER.povDown()
-          .whileTrue(
-            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
-            .andThen(
-              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
-          );
-    
-
-    DRIVER.povLeft()
-          .onTrue(
-            new InstantCommand(() -> shooterSub.setWantedState(AngleState.OVERRIDE, ShooterState.IDLING))
-            .andThen(
-              new InstantCommand(() -> shooterSub.setShooterAngleSetpoint(0)))
-          );
-    
-
-    DRIVER.y().onTrue(
+    DRIVER.start().onTrue(
       new ResetIMU(drivetrain)
-      );
+    );
 
     DRIVER.povRight().onTrue(
       coordSub.setStateCommand(AbsoluteStates.REJECTING)

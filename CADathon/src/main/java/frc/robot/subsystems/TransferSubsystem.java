@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.HashMap;
-
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
@@ -13,6 +11,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.TransferConstants;
 
@@ -45,9 +44,14 @@ public class TransferSubsystem extends SubsystemBase {
   private TalonFX motorBottomRollers = new TalonFX(TransferConstants.BOTTOM_ROLLERS_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private CANrange canrange = new CANrange(TransferConstants.TOWER_CANRANGE_ID, RobotConstants.CANIVORE_BUS);
 
-  private boolean detectedSpeech;
-  private Timer timer = new Timer();
+  private Timer generalTimer = new Timer();
+  private Timer indexerTimer = new Timer();
   private boolean runForward = false;
+  private boolean indexerRunOnce = true;
+
+  private boolean shouldIndex = false;
+  private boolean currentDetection = false;
+  private boolean previousDetection = false;
 
   public TransferSubsystem() {
     configureTower();
@@ -67,7 +71,7 @@ public class TransferSubsystem extends SubsystemBase {
     //motorConfig.CurrentLimits.SupplyCurrentLowerLimit = 25;
 
     CANrangeConfiguration canrangeConfig = new CANrangeConfiguration();
-    canrangeConfig.ProximityParams.ProximityThreshold = 0.07; // meters, 0.15 is roughly half way, which is when we want to see the ball
+    canrangeConfig.ProximityParams.ProximityThreshold = 0.1; // meters, 0.15 is roughly half way, which is when we want to see the ball
     // canrangeConfig.ProximityParams.MinSignalStrengthForValidMeasurement //This should be used, but will need to see what the value should be when robot is built
 
     motorTowerWheels.getConfigurator().apply(motorConfig);
@@ -100,7 +104,6 @@ public class TransferSubsystem extends SubsystemBase {
   public void periodic() {
 
     Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
-    //detectedSpeech = ;
     if(!getCANRangeTriggered() && currentState == transferStates.STORING) {
       runForward = false;
     }
@@ -129,14 +132,14 @@ public class TransferSubsystem extends SubsystemBase {
         hopperSideVoltage = 3;
         if (getCANRangeTriggered() && !runForward) {
           towerVoltage = 0.75;
-          timer.restart();
+          generalTimer.restart();
           runForward = true;
         } else if (runFowardDone()) {
           hopperBottomVoltage = 1;
           towerVoltage = 0;
           hopperSideVoltage = 0;
-          timer.stop();
-        } else if(!runForward){
+          generalTimer.stop();
+        } else if(!runForward){ // What is this for?
           towerVoltage = 1;
         }
         break;
@@ -146,21 +149,38 @@ public class TransferSubsystem extends SubsystemBase {
         hopperSideVoltage = 4;
         if (getCANRangeTriggered() && !runForward) {
           towerVoltage = 0.75;
-          timer.restart();
+          generalTimer.restart();
           runForward = true;
         } else if (runFowardDone()) {
           towerVoltage = 0;
           hopperSideVoltage = 0;
-          timer.stop();
+          generalTimer.stop();
         } else if(!runForward){
           towerVoltage = 1;
         }
         break;
 
       case FEEDING:
-        hopperBottomVoltage = 4;
-        hopperSideVoltage = 4;
-        towerVoltage = 6;
+        if (!currentDetection && previousDetection && enoughTimePassed()) {
+          shouldIndex = true;
+          indexerRunOnce = true;
+        }
+        if (shouldIndex && indexerRunOnce) {
+          indexerRunOnce = false;
+          indexerTimer.restart();
+        }
+        if (shouldIndex && enoughTimePassed()) {
+          shouldIndex = false;
+        }
+        if (shouldIndex) {
+          hopperBottomVoltage = 0;
+          hopperSideVoltage = 0;
+          towerVoltage = 0;
+        } else {
+          hopperBottomVoltage = 6;
+          hopperSideVoltage = 6;
+          towerVoltage = 8;
+        }
         break;
 
       case REJECTING:
@@ -186,16 +206,17 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   public boolean runFowardDone() {
-    if(timer.get() > 2) {
+    if(generalTimer.get() > 2) {
       return true;
     }
     return false;
   }
 
   private void publishLogs() {
-    Logger.recordOutput("HeroHeist/Transfer/Tower/Ball Detected?", detectedSpeech);
     Logger.recordOutput("HeroHeist/Transfer/CurrentState", currentState);
     Logger.recordOutput("HeroHeist/Transfer/Tower/MotorVoltage", motorTowerWheels.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Transfer/Tower/RunFoward", runForward);
+    Logger.recordOutput("HeroHeist/Transfer/Indexing?", shouldIndex);
   }
 
   public void setWantedState(transferStates wantedState) {
@@ -207,7 +228,14 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   public boolean getCANRangeTriggered() {
-    return canrange.getIsDetected(true).getValue().booleanValue();
+    previousDetection = currentDetection;
+    currentDetection = canrange.getIsDetected(true).getValue().booleanValue();
+    return currentDetection;
+  }
+
+  private boolean enoughTimePassed() {
+    Logger.recordOutput("HeroHeist/Transfer/Indexer/Time", indexerTimer.get());
+    return indexerTimer.get() > 0.1;
   }
 
   public static TransferSubsystem getInstance() {

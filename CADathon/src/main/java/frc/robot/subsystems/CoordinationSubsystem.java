@@ -117,7 +117,7 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case SHOOTING_SPEECH:
                 transferState = transferStates.FEEDING;
-                intakeState = intakePos.STORE;
+                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.SHOOTING;
                 shooterAngleState = AngleState.AIMING; // Used to be aiming
@@ -137,6 +137,9 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case REJECTING:
                 transferState = transferStates.REJECTING;
+                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                intaking = intakeStates.OUTTAKING;
+                shooterAngleState = AngleState.AIMING;
                 break;
             
             default:
@@ -155,7 +158,7 @@ public class CoordinationSubsystem extends SubsystemBase{
     }
 
     private void publishLogs() {
-        Logger.recordOutput("HeroHesit/Coordination/Faults/Intake Instance null?", intakeInstance == null);
+        Logger.recordOutput("HeroHeist/Coordination/Faults/Intake Instance null?", intakeInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Transfer Instance null?", transferInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Faults/Shooter Instance null?", shooterInstance == null);
         Logger.recordOutput("HeroHeist/Coordination/Current State", currentState);

@@ -23,6 +23,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.RobotConstants.ShooterConstants;
 import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
@@ -30,6 +31,7 @@ import frc.robot.subsystems.CoordinationSubsystem.AbsoluteStates;
 public class ShooterSubsystem extends SubsystemBase {
 
   private static ShooterSubsystem INSTANCE;
+  private static VisionSubsystem vision = RobotContainer.vision;
 
   public enum ShooterState {
     OVERRIDE,
@@ -39,6 +41,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public enum AngleState {
     OVERRIDE,
+    ZEROING,
     STORING,
     IDLING,
     AIMING
@@ -61,18 +64,18 @@ public class ShooterSubsystem extends SubsystemBase {
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Voltage", 4);
-  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Acceleration", 4);
-  private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tunable/Shooter/Hood/Jerk", 400);
+  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Velocity", 24);
+  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Acceleration", 24);
+  private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Jerk", 1000);
   private double mmVelocity = logMMVeloc.get();
   private double mmAcceleration = logMMAccel.get();
   private double mmJerk = logMMJerk.get();
 
   // Feedforward and PIDF constants
-  private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0);
+  private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0.15);
   private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kV", 0.33);
-  private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kA", 0.05);
-  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 0.085);
+  private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kA", 0.1);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 6);
   private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kI", 0);
   private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kD", 0);
   private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kG", 0.05);
@@ -110,6 +113,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private LoggedNetworkNumber logDistanceAway = new LoggedNetworkNumber("/Tuning/Shooter/Distance", 1);
   private double distanceAway = logDistanceAway.get();
+  private double calculatedDistance = 0;
+  private double allowedDistanceDiff = 0.1;
 
  /* distance, height */
   InterpolatingDoubleTreeMap downtownPowerMapVoltage = new InterpolatingDoubleTreeMap(); // Add a position later
@@ -154,19 +159,19 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // VELOCITY
     downtownPowerMapVelocity.put(1.0922, 33.0);
-    downtownAngleMapVelocity.put(1.0922, 1.89);
+    downtownAngleMapVelocity.put(1.0922, 11.5125381); //1.89
 
     downtownPowerMapVelocity.put(1.3843, 34.0);
-    downtownAngleMapVelocity.put(1.3843, 2.3);
+    downtownAngleMapVelocity.put(1.3843, 14.009967); //2.3
 
     downtownPowerMapVelocity.put(1.7018, 34.0);
-    downtownAngleMapVelocity.put(1.7018, 3.0);
+    downtownAngleMapVelocity.put(1.7018, 18.276387); //3.0
 
     downtownPowerMapVelocity.put(2.0066, 37.5);
-    downtownAngleMapVelocity.put(2.0066, 2.71);
+    downtownAngleMapVelocity.put(2.0066, 16.5073959); //2.71
 
     downtownPowerMapVelocity.put(2.3622, 40.0);
-    downtownAngleMapVelocity.put(2.3622, 3.22);
+    downtownAngleMapVelocity.put(2.3622, 19.6139538); //3.22
     
 
   }
@@ -202,8 +207,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private void configureAngleMotor() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
-    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
@@ -225,17 +230,16 @@ public class ShooterSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicJerk = mmJerk;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 4.530273;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 27.595215;
 
     motorAngle.getConfigurator().apply(motorConfig);
   }
 
   private void updateShooterAngleConstants() {
     TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-    motorConfig.MotorOutput.NeutralMode = RobotConstants.DEFAULT_NEUTRAL_MODE;
-    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     motorConfig.CurrentLimits.StatorCurrentLimit = 40;
@@ -273,11 +277,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
   private boolean zeroEncoder() {
-    motorAngle.setVoltage(-0.55);
-    if (Math.abs(motorAngle.getVelocity().getValueAsDouble()) < 0.1) {
+    if (Math.abs(motorAngle.getMotorVoltage().getValueAsDouble()) > 0.6 && Math.abs(motorAngle.getVelocity().getValueAsDouble()) < 0.05) {
       motorAngle.setPosition(0);
       motorAngle.setVoltage(0);
-      currentAngleState = AngleState.IDLING;
+      currentAngleState = AngleState.STORING;
       return true;
     }
     return false;
@@ -285,13 +288,17 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // if (!isZeroingDone) {
-    //   currentAngleState = AngleState.STORING;
-    //   isZeroingDone = zeroEncoder();
-    // }
-    if(changeOnce) {
-      updateShooterValues(getDistance()); // comment for tuning
-      changeOnce = false;
+    if (!isZeroingDone) {
+      currentAngleState = AngleState.ZEROING;
+      isZeroingDone = zeroEncoder();
+    }
+    double currentDistance = vision.getDistanceToTag19();
+    if (isZeroingDone && Math.abs(currentDistance - calculatedDistance) > allowedDistanceDiff) {
+      calculatedDistance = currentDistance;
+      double shooterVeloc = downtownPowerMapVelocity.get(calculatedDistance);
+      double shooterAngle = downtownAngleMapVelocity.get(calculatedDistance);
+      velocitySetpoint = shooterVeloc;
+      aimingSetpoint = shooterAngle;
     }
     publishLogs();
     applyState();
@@ -318,8 +325,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
     switch (currentAngleState) {
       case OVERRIDE:
-        //motorAngle.setVoltage(angleVoltage);
         motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
+        break;
+
+      case ZEROING:
+        motorAngle.setVoltage(-0.8);
         break;
 
       case STORING:
@@ -343,6 +353,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private void publishLogs() {
     Logger.recordOutput("HeroHeist/Shooter/Hood/Voltage", motorAngle.getMotorVoltage().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Velocity", motorAngle.getVelocity().getValueAsDouble());
+    Logger.recordOutput("HeroHeist/Shooter/Hood/currently Zeroing?",!isZeroingDone);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Current State", currentAngleState);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
@@ -356,7 +368,7 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Spun Up", wheelsSpunUp);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/AngleReady", angleAtSetpoint());
     Logger.recordOutput("HeroHeist/Shooter/ChangeOnce", changeOnce);
-    Logger.recordOutput("HeroHeist/Shooter/DistanceAway", distanceAway);
+    Logger.recordOutput("HeroHeist/Shooter/Calculated Distance", calculatedDistance);
 
   }
 
@@ -369,7 +381,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Velocity //
     aimingSetpoint = MathUtil.clamp(downtownAngleMapVelocity.get(distance), 0, 4.53);
-    velocitySetpoint = MathUtil.clamp(downtownPowerMapVelocity.get(distance) + 0.5, 0, 60); // Change the max later
+    velocitySetpoint = MathUtil.clamp(downtownPowerMapVelocity.get(distance), 0, 60); // Change the max later // +0.5 to the get(dist)
   }
 
   /**
@@ -463,6 +475,8 @@ public class ShooterSubsystem extends SubsystemBase {
       vKA =lVKAVal;
       vKP = lVKPVal;
       vKFF = lVKFFVal;
+      vAccel = lVAccel;
+      vJerk = lVJerk;
       updateShooterVelocityConstants();
     }
 

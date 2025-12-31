@@ -153,6 +153,12 @@ public class RobotContainer {
       coordSub.setStateCommand(AbsoluteStates.STORING)
     );
 
+    DRIVER.b().onTrue(
+      coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
+    ).onFalse(
+      coordSub.setStateCommand(AbsoluteStates.STORING)
+    );
+
 
     //look for .until() for having shooter wait to feed till shooter is at wanted Veloc and angle
   }

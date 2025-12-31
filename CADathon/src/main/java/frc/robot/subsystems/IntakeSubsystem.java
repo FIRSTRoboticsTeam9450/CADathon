@@ -28,7 +28,7 @@ public class IntakeSubsystem extends SubsystemBase {
     SPEECH_BUBBLES_INTAKE,
     STORY_BOARDS_INTAKE,
     STORE,
-    ZERO,
+    ZEROING,
     STORY_BOARDS_SCORE
   }
 
@@ -66,9 +66,9 @@ public class IntakeSubsystem extends SubsystemBase {
   private double kG = logMMKG.get();
   private DynamicMotionMagicVoltage request = new DynamicMotionMagicVoltage(0, velocity, acceleration, jerk);
 
-  private intakePos currentPos = intakePos.ZERO;
-  private intakePos prevPos = intakePos.ZERO;
-  private intakePos targetPos = intakePos.ZERO;
+  private intakePos currentPos = intakePos.ZEROING;
+  private intakePos prevPos = intakePos.ZEROING;
+  private intakePos targetPos = intakePos.ZEROING;
 
   private intakeStates currState = intakeStates.NOT_RUNNING;
   private intakeStates targetState = intakeStates.NOT_RUNNING;
@@ -149,6 +149,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void periodic() {
     // Zero encoder
     // if(!resetDone) {
+    //   currentPos = intakePos.ZEROING;
     //   resetDone = isEncoderReset();
     // }
 
@@ -193,7 +194,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private boolean isEncoderReset() {
-    if(Math.abs(motorPivot.getVelocity().getValueAsDouble()) < .1) {
+    if(Math.abs(motorPivot.getMotorVoltage().getValueAsDouble()) > 0.3 &&Math.abs(motorPivot.getVelocity().getValueAsDouble()) < .1) {
       motorPivot.setPosition(0);
       motorPivot.setVoltage(0);
       setTargetPos(intakePos.STORE, intakeStates.NOT_RUNNING);

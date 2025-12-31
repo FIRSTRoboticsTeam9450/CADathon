@@ -64,15 +64,24 @@ public class CoordinationSubsystem extends SubsystemBase{
         AngleState shooterAngleState = AngleState.IDLING;
         
         if(currentState == AbsoluteStates.PREPARING_FOR_SHOT) {
-
             if(shooterInstance.shooterReady()) {
                 currentState = AbsoluteStates.SHOOTING_SPEECH;
             }
+        } else if (currentState == AbsoluteStates.SHOOTING_SPEECH) {
+            if (!shooterInstance.shooterReady()) {
+                currentState = AbsoluteStates.PREPARING_FOR_SHOT;
+            }
         }
+
         switch (currentState) {
             case SHOOTER_OVERRIDE:
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.OVERRIDE;
+                shooterAngleState = AngleState.IDLING;
+
+                transferState = transferStates.FEEDING;
+                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                intaking = intakeStates.NOT_RUNNING;
+                break;
                 
             case STORING:
                 transferState = transferStates.STORING;
@@ -137,7 +146,11 @@ public class CoordinationSubsystem extends SubsystemBase{
 
             case REJECTING:
                 transferState = transferStates.REJECTING;
-                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
                 intaking = intakeStates.OUTTAKING;
                 shooterAngleState = AngleState.AIMING;
                 break;

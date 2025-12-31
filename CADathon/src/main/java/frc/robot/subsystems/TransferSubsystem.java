@@ -48,6 +48,7 @@ public class TransferSubsystem extends SubsystemBase {
   private Timer indexerTimer = new Timer();
   private boolean runForward = false;
   private boolean indexerRunOnce = true;
+  private Timer testIndexTimer = new Timer();
 
   private boolean shouldIndex = false;
   private boolean currentDetection = false;
@@ -64,7 +65,7 @@ public class TransferSubsystem extends SubsystemBase {
     motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.StatorCurrentLimit = 40;
+    motorConfig.CurrentLimits.StatorCurrentLimit = 60;
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     //motorConfig.CurrentLimits.SupplyCurrentLowerTime = 0.8;
     motorConfig.CurrentLimits.SupplyCurrentLimit = 40;
@@ -137,16 +138,21 @@ public class TransferSubsystem extends SubsystemBase {
         } else if (runFowardDone()) {
           hopperBottomVoltage = 1;
           towerVoltage = 0;
-          hopperSideVoltage = 0;
+          hopperSideVoltage = 0.5;
           generalTimer.stop();
         } else if(!runForward){ // What is this for?
-          towerVoltage = 1;
+          towerVoltage = 2.5;
         }
         break;
       
       case PREPARING_FOR_SHOT:
-        hopperBottomVoltage = 4;
-        hopperSideVoltage = 4;
+        if (testIndexTimer.get() < 0.5) {
+          hopperBottomVoltage = -1;
+          hopperSideVoltage = -1;
+        } else {
+          hopperBottomVoltage = 4;
+          hopperSideVoltage = 4;
+        }
         if (getCANRangeTriggered() && !runForward) {
           towerVoltage = 0.75;
           generalTimer.restart();
@@ -161,32 +167,20 @@ public class TransferSubsystem extends SubsystemBase {
         break;
 
       case FEEDING:
-        if (!currentDetection && previousDetection && enoughTimePassed()) {
-          shouldIndex = true;
-          indexerRunOnce = true;
-        }
-        if (shouldIndex && indexerRunOnce) {
-          indexerRunOnce = false;
-          indexerTimer.restart();
-        }
-        if (shouldIndex && enoughTimePassed()) {
-          shouldIndex = false;
-        }
-        if (shouldIndex) {
-          hopperBottomVoltage = 0;
-          hopperSideVoltage = 0;
-          towerVoltage = 0;
-        } else {
-          hopperBottomVoltage = 6;
-          hopperSideVoltage = 6;
-          towerVoltage = 8;
-        }
+          if (getCANRangeTriggered()) {
+            hopperBottomVoltage = -2;
+            hopperSideVoltage = -2;
+          } else {
+            hopperBottomVoltage = 4.5;
+            hopperSideVoltage = 4.5;
+          }
+          towerVoltage = 4;
         break;
 
       case REJECTING:
         hopperBottomVoltage = -3;
         hopperSideVoltage = -3;
-        towerVoltage = -1;
+        towerVoltage = -2.5;
         break;
 
       default:
@@ -220,6 +214,9 @@ public class TransferSubsystem extends SubsystemBase {
   }
 
   public void setWantedState(transferStates wantedState) {
+    if (currentState != wantedState) {
+      testIndexTimer.restart();
+    }
     currentState = wantedState;
   }
 

@@ -106,8 +106,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private final MotionMagicVelocityVoltage vRequest;
   //private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage Setpoint", 4); // used to be 45
   private double voltageSetpoint = 0;//logVoltageSetpoint.get(); Uncomment for voltage tuning
-  // private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
-   private double velocitySetpoint = 0; //logVelocitySetpoint.get();  // Uncomment for velocity tuning
+  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
+   private double velocitySetpoint = logVelocitySetpoint.get();  // Uncomment for velocity tuning
 
   private double aimingSetpoint = 0;
 
@@ -309,7 +309,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private void applyState() {
     switch (currentShooterState) {
       case OVERRIDE:
-        motorWheelLeader.setControl(voltageRequest);
         break;
 
       case SHOOTING:
@@ -329,7 +328,7 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case ZEROING:
-        motorAngle.setVoltage(-0.8);
+        motorAngle.setVoltage(-1.2);
         break;
 
       case STORING:
@@ -380,16 +379,16 @@ public class ShooterSubsystem extends SubsystemBase {
     // voltageSetpoint = MathUtil.clamp(downtownPowerMapVoltage.get(distance), 0, 12);
 
     // Velocity //
-    aimingSetpoint = MathUtil.clamp(downtownAngleMapVelocity.get(distance), 0, 4.53);
-    velocitySetpoint = MathUtil.clamp(downtownPowerMapVelocity.get(distance), 0, 60); // Change the max later // +0.5 to the get(dist)
+    // aimingSetpoint = MathUtil.clamp(downtownAngleMapVelocity.get(distance), 0, 4.53);
+    // velocitySetpoint = MathUtil.clamp(downtownPowerMapVelocity.get(distance), 0, 60); // Change the max later // +0.5 to the get(dist)
   }
 
   /**
    * uses a default tolerance
    * @return
    */
-  private boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(.2); // used to be 2 for velocity got to tune it more
+  public boolean rpmWithinTolerance() {
+    return rpmWithinTolerance(1.2); // used to be 2 for velocity got to tune it more
   }
 
   /**
@@ -445,19 +444,19 @@ public class ShooterSubsystem extends SubsystemBase {
     double lVKFFVal = logVKFF.get();
     double lVAccel = logVAccel.get();
     double lVJerk = logVJerk.get();
-    // double lVVSVal = logVelocitySetpoint.get(); //Uncomment for velocity tuning
+    double lVVSVal = logVelocitySetpoint.get(); //Uncomment for velocity tuning
     //double lVoltageSetpoint = logVoltageSetpoint.get(); Uncomment for voltage tuning
     
     double lDistanceAway = logDistanceAway.get();
     updateSetpoints = (distanceAway != lDistanceAway)
-                    // || (velocitySetpoint != lVVSVal)  // Uncomment for velocity tuning
+                    || (velocitySetpoint != lVVSVal)  // Uncomment for velocity tuning
                      //|| (voltageSetpoint != lVoltageSetpoint) Uncomment for voltage tuning
                      ;
     if(updateSetpoints) {
       distanceAway = lDistanceAway;
       changeOnce = true;
       //voltageSetpoint = lVoltageSetpoint;
-      // velocitySetpoint = lVVSVal;  // Uncomment for velocity tuning
+      velocitySetpoint = lVVSVal;  // Uncomment for velocity tuning
 
     }
     updateOuttakeVals = (vKS != lVKSVal)

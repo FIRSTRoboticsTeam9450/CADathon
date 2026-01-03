@@ -35,14 +35,15 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum intakeStates {
     INTAKING,
     OUTTAKING,
-    NOT_RUNNING
+    NOT_RUNNING,
+    INTAKE_SLOW
   }
 
   private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS); // Good voltage is around 1.5V
 
-  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 11);
-  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 13);
+  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 70);
+  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 40);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Jerk", 1000);
 
   private double velocity = logMMVel.get();
@@ -55,7 +56,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 20);
   private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kI", 0);
   private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kD", 0);
-  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0.2);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0.3);
 
   private double kS = logMMKS.get(); // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
   private double kV = logMMKV.get(); // A velocity target of 1 rps results in 0.12 V output .12
@@ -287,11 +288,14 @@ public class IntakeSubsystem extends SubsystemBase {
   public double getIntakeVoltage(intakeStates state) {
     switch (state) {
       case INTAKING:
-        return 6;
+        return 8;
       case OUTTAKING:
         return 0;
       case NOT_RUNNING:
         return 0;
+      case INTAKE_SLOW:
+        return 3;
+
       default:
         return 0;
     }

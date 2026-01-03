@@ -7,10 +7,14 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AutoAlign;
 import frc.robot.commands.ResetIMU;
 import frc.robot.commands.RotationAlign;
 import frc.robot.generated.TunerConstants;
@@ -95,7 +99,7 @@ public class RobotContainer {
                     .withRotationalRate(-rotateBezier.getOutput(DRIVER.getRightX()) * maxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
-
+    DRIVER.leftStick().whileTrue(new AutoAlign(drivetrain, DRIVER, new Pose2d (new Translation2d(3.52, 5.84), new Rotation2d((-60.0/180.0) * Math.PI))));
     DRIVER.leftTrigger()
           .onTrue(
             coordSub.setStateCommand(AbsoluteStates.INTAKING_SPEECH)

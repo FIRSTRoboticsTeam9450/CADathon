@@ -205,7 +205,7 @@ public class VisionSubsystem extends SubsystemBase {
         double robotYaw = drivetrain.getPigeon2().getYaw().getValueAsDouble() - RobotContainer.pigeonOffset;
         LimelightHelpers.SetRobotOrientation(limelightP.getName(), robotYaw, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate peP = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightP.getName());
-
+        drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
         if (peP.tagCount != 0) {
             lastVisionPose = peP.pose;
 

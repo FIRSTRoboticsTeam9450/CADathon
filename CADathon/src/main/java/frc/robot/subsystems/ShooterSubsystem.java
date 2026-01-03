@@ -64,8 +64,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Velocity", 24);
-  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Acceleration", 24);
+  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Velocity", 29); // Used to be 24 24
+  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Acceleration", 26);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Jerk", 1000);
   private double mmVelocity = logMMVeloc.get();
   private double mmAcceleration = logMMAccel.get();
@@ -106,8 +106,9 @@ public class ShooterSubsystem extends SubsystemBase {
   private final MotionMagicVelocityVoltage vRequest;
   //private LoggedNetworkNumber logVoltageSetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Voltage Setpoint", 4); // used to be 45
   private double voltageSetpoint = 0;//logVoltageSetpoint.get(); Uncomment for voltage tuning
-  private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
-   private double velocitySetpoint = logVelocitySetpoint.get();  // Uncomment for velocity tuning
+  // private LoggedNetworkNumber logVelocitySetpoint = new LoggedNetworkNumber("/Tuning/Shooter/Outtake/Velocity Setpoint", 45); // used to be 45
+   private double velocitySetpoint = 0; // logVelocitySetpoint.get();  // Uncomment for velocity tuning
+   private double velocityOverrideSetpoint = 0;
 
   private double aimingSetpoint = 0;
 
@@ -309,6 +310,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private void applyState() {
     switch (currentShooterState) {
       case OVERRIDE:
+      
+        motorWheelLeader.setControl(vRequest.withVelocity(velocityOverrideSetpoint).withFeedForward(vKFF));
         break;
 
       case SHOOTING:
@@ -358,8 +361,10 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Current State", currentShooterState);
     Logger.recordOutput("HeroHeist/Shooter/Hood/Position", motorAngle.getPosition().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Hood/Setpoint", aimingSetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Hood/Override Setpoint", angleSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/VoltageSetpoint", voltageSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/VelocitySetpoint", velocitySetpoint);
+    Logger.recordOutput("HeroHeist/Shooter/Wheels/OverrideVelocitySetpoint", velocityOverrideSetpoint);
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Velocity", motorWheelLeader.getVelocity().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Front Voltage", motorWheelLeader.getMotorVoltage().getValueAsDouble());
     Logger.recordOutput("HeroHeist/Shooter/Wheels/Back Voltage", motorWheelFollower.getMotorVoltage().getValueAsDouble());
@@ -368,6 +373,7 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("HeroHeist/Shooter/Wheels/AngleReady", angleAtSetpoint());
     Logger.recordOutput("HeroHeist/Shooter/ChangeOnce", changeOnce);
     Logger.recordOutput("HeroHeist/Shooter/Calculated Distance", calculatedDistance);
+    Logger.recordOutput("HeroHeist/Shooter/Shooter Ready", shooterReady());
 
   }
 
@@ -388,7 +394,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return
    */
   public boolean rpmWithinTolerance() {
-    return rpmWithinTolerance(1.2); // used to be 2 for velocity got to tune it more
+    return rpmWithinTolerance(1.8); // used to be 2 for velocity got to tune it more
   }
 
   /**
@@ -402,13 +408,15 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /* --------------- Setters --------------- */
-
+  public void setVelocityOverrideSetpoint(double setpoint) {
+    velocityOverrideSetpoint = setpoint;
+  }
   public void setVelocitySetpoint(double setpoint) {
     velocitySetpoint = setpoint;
   }
 
   public void setShooterAngleSetpoint(double setpoint) {
-    angleSetpoint = MathUtil.clamp(setpoint, 0, 4.53);
+    angleSetpoint = MathUtil.clamp(setpoint, 0, 27.595215);
   }
 
   public void setWantedState(AngleState angleState, ShooterState shooterState) {
@@ -444,19 +452,19 @@ public class ShooterSubsystem extends SubsystemBase {
     double lVKFFVal = logVKFF.get();
     double lVAccel = logVAccel.get();
     double lVJerk = logVJerk.get();
-    double lVVSVal = logVelocitySetpoint.get(); //Uncomment for velocity tuning
+    // double lVVSVal = logVelocitySetpoint.get(); //Uncomment for velocity tuning
     //double lVoltageSetpoint = logVoltageSetpoint.get(); Uncomment for voltage tuning
     
     double lDistanceAway = logDistanceAway.get();
     updateSetpoints = (distanceAway != lDistanceAway)
-                    || (velocitySetpoint != lVVSVal)  // Uncomment for velocity tuning
+                    // || (velocitySetpoint != lVVSVal)  // Uncomment for velocity tuning
                      //|| (voltageSetpoint != lVoltageSetpoint) Uncomment for voltage tuning
                      ;
     if(updateSetpoints) {
       distanceAway = lDistanceAway;
       changeOnce = true;
       //voltageSetpoint = lVoltageSetpoint;
-      velocitySetpoint = lVVSVal;  // Uncomment for velocity tuning
+      // velocitySetpoint = lVVSVal;  // Uncomment for velocity tuning
 
     }
     updateOuttakeVals = (vKS != lVKSVal)

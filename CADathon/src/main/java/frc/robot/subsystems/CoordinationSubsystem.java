@@ -29,7 +29,8 @@ public class CoordinationSubsystem extends SubsystemBase{
         PREPARING_FOR_SHOT,
         SHOOTING_SPEECH,
         SHOOT_STORY,
-        REJECTING
+        REJECTING,
+        PREPARING_FOR_SHOT_OVERRIDE
     }
 
     public enum ScoringLocation {
@@ -72,17 +73,42 @@ public class CoordinationSubsystem extends SubsystemBase{
                 currentState = AbsoluteStates.PREPARING_FOR_SHOT;
             }
         }
-
+        if(currentState == AbsoluteStates.PREPARING_FOR_SHOT_OVERRIDE) {
+            if(shooterInstance.shooterReady()) {
+                currentState = AbsoluteStates.SHOOTER_OVERRIDE;
+            }
+        } else if (currentState == AbsoluteStates.SHOOTER_OVERRIDE) {
+            if (!shooterInstance.shooterReady()) {
+                currentState = AbsoluteStates.PREPARING_FOR_SHOT_OVERRIDE;
+            }
+        }
         switch (currentState) {
-            case SHOOTER_OVERRIDE:
-                shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.IDLING;
+            case PREPARING_FOR_SHOT_OVERRIDE:
+                shooterState = ShooterState.OVERRIDE;
+                shooterAngleState = AngleState.OVERRIDE;
 
-                transferState = transferStates.FEEDING;
-                intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                transferState = transferStates.PREPARING_FOR_SHOT;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
                 intaking = intakeStates.NOT_RUNNING;
                 break;
-                
+            
+            case SHOOTER_OVERRIDE:
+                shooterState = ShooterState.OVERRIDE;
+                shooterAngleState = AngleState.OVERRIDE;
+
+                transferState = transferStates.FEEDING;
+                if (intakeRaise) {
+                    intakeState = intakePos.STORE;
+                } else {
+                    intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
+                }
+                intaking = intakeStates.INTAKE_SLOW;
+                break;
+
             case STORING:
                 transferState = transferStates.STORING;
                 if (intakeRaise) {
@@ -201,6 +227,10 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public Command setDoesIntakeRaiseCommand(boolean value) {
         return new InstantCommand(() -> setDoesIntakeRaise(value));
+    }
+    
+    public AbsoluteStates getCurrentState() {
+        return currentState;
     }
 
     public ScoringLocation getScoringLocation() {

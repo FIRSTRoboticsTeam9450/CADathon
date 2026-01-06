@@ -208,6 +208,7 @@ public class VisionSubsystem extends SubsystemBase {
         drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(visionStdDevX, visionStdDevY, visionStdDevTheta));
         if (peP.tagCount != 0) {
             lastVisionPose = peP.pose;
+            lastVisionTimestamp = peP.timestampSeconds;
 
             Logger.recordOutput("HeroHeist/Vision/Pose", lastVisionPose);
 

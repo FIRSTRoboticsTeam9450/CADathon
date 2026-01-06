@@ -45,8 +45,8 @@ public class RotationAlign extends Command{
     @Override
     public void initialize() {
         target = vision.getRotationTarget();
-        // currentPose = drive.getState().Pose;
-        currentPose = vision.getLastVisionPose();
+        currentPose = drive.getState().Pose;
+        // currentPose = vision.getLastVisionPose();
         double rotationTarget = calculateRotationAngleTarget();
 
         rotationPID.setSetpoint(rotationTarget);
@@ -54,8 +54,8 @@ public class RotationAlign extends Command{
 
     @Override
     public void execute() {
-        // currentPose = drive.getState().Pose;
-        currentPose = vision.getLastVisionPose();
+        currentPose = drive.getState().Pose;
+        // currentPose = vision.getLastVisionPose();
 
         rotationPID.setSetpoint(calculateRotationAngleTarget());
         double power = rotationPID.calculate(currentPose.getRotation().getRadians());

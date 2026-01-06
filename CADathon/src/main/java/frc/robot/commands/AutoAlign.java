@@ -61,15 +61,16 @@ public class AutoAlign extends Command{
     @Override
     public void initialize() {
         targetRotation = vision.getRotationTarget();
-        currentPose = vision.getLastVisionPose();
+        //currentPose = vision.getLastVisionPose();
+        currentPose = drive.getState().Pose;
         startedShoot = false;
         rotationPID.setSetpoint(calculateRotationAngleTarget());
     }
 
     @Override
     public void execute() {
-        // currentPose = drive.getState().Pose;
-        currentPose = vision.getLastVisionPose();
+        currentPose = drive.getState().Pose;
+        //currentPose = vision.getLastVisionPose();
 
         rotationPID.setSetpoint(calculateRotationAngleTarget());
         if(atSetpoint(0.1, 0.1)) {
@@ -88,8 +89,8 @@ public class AutoAlign extends Command{
             xPID.setSetpoint(targetPose.getX());
             yPID.setSetpoint(targetPose.getY());
             double powerRotation = rotationPID.calculate(currentPose.getRotation().getRadians());
-            double powerX = MathUtil.clamp(xPID.calculate(currentPose.getX()), -1.5, 1.5);
-            double powerY = MathUtil.clamp(yPID.calculate(currentPose.getY()), -1.5, 1.5);
+            double powerX = MathUtil.clamp(xPID.calculate(currentPose.getX()), -2.5, 2.5);
+            double powerY = MathUtil.clamp(yPID.calculate(currentPose.getY()), -2.5, 2.5);
 
             powerX += .05*Math.signum(powerX);
             powerY += .05*Math.signum(powerY);

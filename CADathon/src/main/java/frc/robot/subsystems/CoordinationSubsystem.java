@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
@@ -45,6 +46,7 @@ public class CoordinationSubsystem extends SubsystemBase{
     private ScoringLocation wantedScoringLocation = ScoringLocation.DOWNTOWN;
 
     private boolean intakeRaise = true;
+    private boolean triggerModeIsShooting = false;
 
     public CoordinationSubsystem() {
     }
@@ -203,6 +205,15 @@ public class CoordinationSubsystem extends SubsystemBase{
         Logger.recordOutput("HeroHeist/Coordination/Current State", currentState);
         Logger.recordOutput("HeroHeist/Coordination/Wanted Scoring Type", wantedScoringLocation);
         Logger.recordOutput("HeroHeist/Coordination/Should Intake Raise", intakeRaise);
+    }
+
+    public Command rightTriggerHeld(boolean held) {
+        triggerModeIsShooting = held;
+        return new InstantCommand(() -> triggerModeIsShooting = held);
+    }
+
+    public Command leftTriggerCommand() {
+        return Commands.either(setStateCommand(AbsoluteStates.SHOOTING_SPEECH), setStateCommand(AbsoluteStates.INTAKING_SPEECH),() -> triggerModeIsShooting);
     }
 
     public void setState(AbsoluteStates wantedState) {

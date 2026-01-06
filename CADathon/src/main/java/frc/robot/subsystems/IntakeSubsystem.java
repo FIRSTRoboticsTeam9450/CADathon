@@ -42,8 +42,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX motorIntake = new TalonFX(IntakeConstants.INTAKE_MOTOR_ID, RobotConstants.CANIVORE_BUS);
   private TalonFX motorPivot = new TalonFX(IntakeConstants.PIVOT_MOTOR_ID, RobotConstants.CANIVORE_BUS); // Good voltage is around 1.5V
 
-  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 70);
-  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 40);
+  private LoggedNetworkNumber logMMVel = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Velocity", 170);
+  private LoggedNetworkNumber logMMAccl = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Acceleration", 150);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Intake/Pivot/Jerk", 1000);
 
   private double velocity = logMMVel.get();
@@ -53,10 +53,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kS", 0);
   private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kV", 0);
   private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kA", 0);
-  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 20);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kP", 25);
   private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kI", 0);
   private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kD", 0);
-  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0.3);
+  private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Intake/Pivot/kG", 0.5);
 
   private double kS = logMMKS.get(); // Add 0.25 V output to overcome static friction .25 - Gives it a little boost in the very beginning
   private double kV = logMMKV.get(); // A velocity target of 1 rps results in 0.12 V output .12

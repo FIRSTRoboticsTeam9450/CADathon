@@ -2,16 +2,20 @@ package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
+import frc.robot.commands.RotationAlign;
 import frc.robot.subsystems.IntakeSubsystem.intakePos;
 import frc.robot.subsystems.IntakeSubsystem.intakeStates;
 import frc.robot.subsystems.ShooterSubsystem.AngleState;
 import frc.robot.subsystems.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.TransferSubsystem.transferStates;
+import frc.robot.util.BezierCurve;
 
 public class CoordinationSubsystem extends SubsystemBase{
     
@@ -208,12 +212,15 @@ public class CoordinationSubsystem extends SubsystemBase{
     }
 
     public Command rightTriggerHeld(boolean held) {
-        triggerModeIsShooting = held;
         return new InstantCommand(() -> triggerModeIsShooting = held);
     }
 
-    public Command leftTriggerCommand() {
-        return Commands.either(setStateCommand(AbsoluteStates.SHOOTING_SPEECH), setStateCommand(AbsoluteStates.INTAKING_SPEECH),() -> triggerModeIsShooting);
+    public Command leftTriggerCommand(CommandSwerveDrivetrain drivetrain, CommandXboxController DRIVER, BezierCurve driveBezier, double maxSpeed) {
+        return Commands.either(
+            setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT)
+                .andThen(new RotationAlign(drivetrain, DRIVER, driveBezier, maxSpeed)), 
+            setStateCommand(AbsoluteStates.INTAKING_SPEECH),
+            () -> triggerModeIsShooting);
     }
 
     public void setState(AbsoluteStates wantedState) {

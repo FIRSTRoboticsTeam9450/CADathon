@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -226,6 +227,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         } catch (Exception ex) {
             DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
         }
+    }
+
+    public Command getAutoPath(String pathName, boolean mirror) {
+        return new PathPlannerAuto(pathName, mirror);
     }
 
     /**

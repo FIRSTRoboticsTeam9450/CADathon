@@ -159,6 +159,9 @@ public class ShooterSubsystem extends SubsystemBase {
     downtownAngleMapVoltage.put(2.9845, 1.4);
 
     // VELOCITY
+    downtownPowerMapVelocity.put(0.999, 32.0);
+    downtownAngleMapVelocity.put(0.999, 11.5068);
+
     downtownPowerMapVelocity.put(1.0922, 33.0);
     downtownAngleMapVelocity.put(1.0922, 11.5125381); //1.89
 

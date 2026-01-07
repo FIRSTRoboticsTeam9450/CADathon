@@ -1,0 +1,55 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeDown"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Store"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Drive Up"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeUp"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Store"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Test Auto",
+  "choreoAuto": false
+}

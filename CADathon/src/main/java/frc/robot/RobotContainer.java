@@ -5,12 +5,17 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -67,17 +72,37 @@ public class RobotContainer {
         .withRotationalDeadband(rotateBezier.getDeadband())    
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+  private final SendableChooser<Command> autoChooser;
   /**
    *  The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    System.out.println(drivetrain + " I PUT DRIVE TRAIN IN");
     coordSub = CoordinationSubsystem.getInstance();
     shooterSub = ShooterSubsystem.getInstance();
     intakeSub = IntakeSubsystem.getInstance();
     transferSub = TransferSubsystem.getInstance();
-    // Configure the trigger bindings
+
+    autoChooser = new SendableChooser<>();
+
     configureBindings();
+    registerCommands();
+    configureAutos();
+  }
+
+  private void configureAutos() {
+    autoChooser.setDefaultOption("Drive and Shoot", drivetrain.getAutoPath("DriveUpAndShoot", false));
+    autoChooser.addOption("Preload + 1 Intake", drivetrain.getAutoPath("Preload + 1 Intake", false));
+
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+  }
+
+  private void registerCommands() {
+    NamedCommands.registerCommand("Store", coordSub.setStateCommand(AbsoluteStates.STORING));
+    NamedCommands.registerCommand("Shoot", coordSub.setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT));
+    NamedCommands.registerCommand("Intake", coordSub.setStateCommand(AbsoluteStates.INTAKING_SPEECH));
+
+    NamedCommands.registerCommand("IntakeUp", coordSub.setDoesIntakeRaiseCommand(true));
+    NamedCommands.registerCommand("IntakeDown", coordSub.setDoesIntakeRaiseCommand(false));
   }
 
   /**
@@ -99,20 +124,25 @@ public class RobotContainer {
                     .withRotationalRate(-rotateBezier.getOutput(DRIVER.getRightX()) * maxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
-    DRIVER.leftStick().whileTrue(new AutoAlign(drivetrain, DRIVER, new Pose2d (new Translation2d(3.52, 5.84), new Rotation2d((-60.0/180.0) * Math.PI))));
-    DRIVER.leftTrigger()
-          .onTrue(
-            coordSub.setStateCommand(AbsoluteStates.INTAKING_SPEECH)
-          ).onFalse(
-            coordSub.setStateCommand(AbsoluteStates.STORING)
-          );
-    DRIVER.rightTrigger()
-          .whileTrue(
-            coordSub.setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT)
-            .andThen(new RotationAlign(drivetrain, DRIVER, driveBezier, maxSpeed))
-          ).onFalse(
-            coordSub.setStateCommand(AbsoluteStates.STORING)
-          );
+    DRIVER.leftStick().whileTrue(
+      new AutoAlign(drivetrain, 
+                    DRIVER, 
+                    new Pose2d(new Translation2d(3.52, 5.84), new Rotation2d((-60.0/180.0) * Math.PI))
+                    )
+    );
+
+
+    DRIVER.leftTrigger().onTrue(
+      coordSub.leftTriggerCommand(drivetrain, DRIVER, driveBezier, maxSpeed)
+    ).onFalse(
+      coordSub.setStateCommand(AbsoluteStates.STORING)
+      .andThen(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()))
+    );
+    DRIVER.rightTrigger().whileTrue(
+      coordSub.rightTriggerHeld(true)
+    ).onFalse(
+      coordSub.rightTriggerHeld(false)
+    );
     DRIVER.leftBumper()
           .onTrue(
             coordSub.setStateCommand(AbsoluteStates.INTAKING_STORY)
@@ -173,7 +203,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return null;
+    return autoChooser.getSelected();
   }
 
 

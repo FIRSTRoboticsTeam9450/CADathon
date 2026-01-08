@@ -50,6 +50,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Test Auto",
+  "folder": "Test Autos",
   "choreoAuto": false
 }

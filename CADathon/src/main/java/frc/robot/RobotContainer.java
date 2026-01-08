@@ -92,6 +92,8 @@ public class RobotContainer {
   private void configureAutos() {
     autoChooser.setDefaultOption("Drive and Shoot", drivetrain.getAutoPath("DriveUpAndShoot", false));
     autoChooser.addOption("Preload + 1 Intake", drivetrain.getAutoPath("Preload + 1 Intake", false));
+    autoChooser.addOption("Run and Gun", drivetrain.getAutoPath("Run and Gun", false));
+    autoChooser.addOption("Intake Line", drivetrain.getAutoPath("Intake Line", false));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }

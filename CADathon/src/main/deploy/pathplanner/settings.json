@@ -3,10 +3,12 @@
   "robotLength": 0.91,
   "holonomicMode": true,
   "pathFolders": [
-    "Test Auto"
+    "Test - Intake",
+    "Test - Drive Auto",
+    "Test - Run and Gun"
   ],
   "autoFolders": [
-    "Test Auto"
+    "Test Autos"
   ],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,

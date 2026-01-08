@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.7727721898820064,
-        "y": 5.393638623703208
+        "x": 2.87,
+        "y": 6.74
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.6477721898820064,
-        "y": 5.610144974649318
+        "x": 3.12,
+        "y": 6.74
       },
       "isLocked": false,
-      "linkedName": "First Intake End"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.52,
-        "y": 5.84
+        "x": 5.969877049180327,
+        "y": 6.74
       },
       "prevControl": {
-        "x": 3.653148472109146,
-        "y": 5.609380081356791
+        "x": 5.719877049180327,
+        "y": 6.74
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Drive Up End"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 4.475,
+        "x": 4.105,
         "y": 4.145
       },
       "rotationOffset": 0.0,
@@ -44,7 +44,7 @@
   ],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 0.75,
     "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -53,10 +53,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -59.99999999999999
+    "rotation": -119.99999999999999
   },
   "reversed": false,
-  "folder": "Test - Drive Auto",
+  "folder": "Test - Run and Gun",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -59.99999999999999

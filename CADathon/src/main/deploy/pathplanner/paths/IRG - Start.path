@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.87,
-        "y": 6.74
+        "x": 7.097893294633019,
+        "y": 7.0846843230000465
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.12,
-        "y": 6.74
+        "x": 4.0765081035264785,
+        "y": 7.173075911037739
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.969877049180327,
-        "y": 6.74
+        "x": 3.007,
+        "y": 6.55
       },
       "prevControl": {
-        "x": 5.719877049180327,
-        "y": 6.74
+        "x": 2.4210329601705514,
+        "y": 7.564924684545341
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,46 +30,30 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.2153518123667396,
-      "rotationDegrees": 0.0
-    },
-    {
-      "waypointRelativePos": 0.3,
-      "rotationDegrees": 12.5
-    },
-    {
-      "waypointRelativePos": 0.45,
-      "rotationDegrees": -12.5
-    },
-    {
-      "waypointRelativePos": 0.6,
-      "rotationDegrees": 12.5
-    },
-    {
-      "waypointRelativePos": 0.75,
-      "rotationDegrees": -12.5
+      "waypointRelativePos": 0.45415778251598743,
+      "rotationDegrees": -59.99999999999999
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.75,
-    "maxAcceleration": 1.0,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.25,
+    "rotation": -59.99999999999999
   },
   "reversed": false,
-  "folder": "Test - Intake",
+  "folder": "Intake Run and Gun",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -59.99999999999999
+    "rotation": -119.99999999999999
   },
   "useDefaultConstraints": false
 }

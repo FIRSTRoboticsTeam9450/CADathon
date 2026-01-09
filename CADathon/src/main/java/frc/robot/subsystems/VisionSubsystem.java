@@ -66,7 +66,7 @@ public class VisionSubsystem extends SubsystemBase {
     private volatile Pose2d lastVisionPose = drivetrain.getState().Pose;  // Last pose estimated from fused vision
     private volatile Pose2d tag19Pose = new Pose2d(new Translation2d(4.0739, 4.7455), new Rotation2d(2 * Math.PI / 3.0));
     private final double distanceOffsetFromRobotCenterToLLLocation = 0.241;
-    private final Translation2d rotationAimTarget = new Translation2d(4.578232, 4.19001);
+    private final Translation2d rotationAimTarget = new Translation2d(4.475, 4.145);
     private volatile double lastVisionTimestamp = 0.0; // Timestamp of last vision update
 
     // Standard deviations for vision measurements (for filtering/fusion)
@@ -328,8 +328,8 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public double getDistanceToTag19() {
-        if (lastVisionPose == null) return Double.POSITIVE_INFINITY;
-        return (lastVisionPose.getTranslation().getDistance(tag19Pose.getTranslation()) - distanceOffsetFromRobotCenterToLLLocation); //On low hood rev system, subtracting this by 0.5 made it a lot more accurate
+        if (drivetrain.getState().Pose == null) return Double.POSITIVE_INFINITY;
+        return (drivetrain.getState().Pose.getTranslation().getDistance(tag19Pose.getTranslation()) - distanceOffsetFromRobotCenterToLLLocation); //On low hood rev system, subtracting this by 0.5 made it a lot more accurate
     }
 
     public Translation2d getRotationTarget() {

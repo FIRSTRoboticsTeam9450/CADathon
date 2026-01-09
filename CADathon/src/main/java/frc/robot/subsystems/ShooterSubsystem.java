@@ -64,8 +64,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private double angleVoltage = 0;
 
   // Motion Magic parameters
-  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Velocity", 29); // Used to be 24 24
-  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Acceleration", 26);
+  private LoggedNetworkNumber logMMVeloc = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Velocity", 200); // Used to be 24 24
+  private LoggedNetworkNumber logMMAccel = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Acceleration", 500);
   private LoggedNetworkNumber logMMJerk = new LoggedNetworkNumber("/Tuning/Shooter/Angle/Jerk", 1000);
   private double mmVelocity = logMMVeloc.get();
   private double mmAcceleration = logMMAccel.get();
@@ -75,7 +75,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private LoggedNetworkNumber logMMKS = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kS", 0.15);
   private LoggedNetworkNumber logMMKV = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kV", 0.33);
   private LoggedNetworkNumber logMMKA = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kA", 0.1);
-  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 6);
+  private LoggedNetworkNumber logMMKP = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kP", 30);
   private LoggedNetworkNumber logMMKI = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kI", 0);
   private LoggedNetworkNumber logMMKD = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kD", 0);
   private LoggedNetworkNumber logMMKG = new LoggedNetworkNumber("/Tuning/Shooter/Angle/kG", 0.05);
@@ -116,6 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private double distanceAway = logDistanceAway.get();
   private double calculatedDistance = 0;
   private double allowedDistanceDiff = 0.1;
+  private double allowedAutoDistanceDiff = 0.01;
 
  /* distance, height */
   InterpolatingDoubleTreeMap downtownPowerMapVoltage = new InterpolatingDoubleTreeMap(); // Add a position later
@@ -297,7 +298,7 @@ public class ShooterSubsystem extends SubsystemBase {
       isZeroingDone = zeroEncoder();
     }
     double currentDistance = vision.getDistanceToTag19();
-    if (isZeroingDone && Math.abs(currentDistance - calculatedDistance) > allowedDistanceDiff) {
+    if (isZeroingDone && Math.abs(currentDistance - calculatedDistance) > (DriverStation.isAutonomous() ? allowedAutoDistanceDiff : allowedDistanceDiff)) {
       calculatedDistance = currentDistance;
       double shooterVeloc = downtownPowerMapVelocity.get(calculatedDistance);
       double shooterAngle = downtownAngleMapVelocity.get(calculatedDistance);

@@ -95,6 +95,9 @@ public class RobotContainer {
     autoChooser.addOption("Run and Gun", drivetrain.getAutoPath("Run and Gun", false));
     autoChooser.addOption("Intake Line", drivetrain.getAutoPath("Intake Line", false));
 
+    autoChooser.addOption("Preload + 3 Intake", drivetrain.getAutoPath("Preload + 3 Intake", false));
+    autoChooser.addOption("Intake Run and Gun", drivetrain.getAutoPath("Intake Run and Gun", false));
+
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 

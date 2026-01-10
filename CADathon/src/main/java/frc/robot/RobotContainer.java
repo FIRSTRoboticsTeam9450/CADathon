@@ -177,6 +177,20 @@ public class RobotContainer {
     //       .onTrue(
     //         coordSub.setScoringLocationCommand(ScoringLocation.FOOTHILLS_LOW)
     //       );
+    DRIVER.povUp().onTrue(new InstantCommand(() -> shooterSub.setAngleVoltageOverride(2)));
+    DRIVER.povUp().onFalse(new InstantCommand(() -> shooterSub.setAngleVoltageOverride(0)));
+
+    DRIVER.povDown().onTrue(new InstantCommand(() -> shooterSub.setAngleVoltageOverride(-2)));
+    DRIVER.povDown().onFalse(new InstantCommand(() -> shooterSub.setAngleVoltageOverride(0)));
+
+
+    DRIVER.y().onTrue(new InstantCommand(() -> shooterSub.setVoltageSetpoint(12)));
+    DRIVER.b().onTrue(new InstantCommand(() -> shooterSub.setVoltageSetpoint(10)));
+    DRIVER.a().onTrue(new InstantCommand(() -> shooterSub.setVoltageSetpoint(6)));
+    DRIVER.x().onTrue(new InstantCommand(() -> shooterSub.setVoltageSetpoint(8)));
+
+    // DRIVER.a().or(DRIVER.b().or(DRIVER.x().or(DRIVER.y()))).onFalse(new InstantCommand(() -> shooterSub.setVoltageSetpoint(0)));
+
 
     DRIVER.povLeft().onTrue(
       coordSub.setDoesIntakeRaiseCommand(true)
@@ -192,11 +206,11 @@ public class RobotContainer {
       coordSub.setStateCommand(AbsoluteStates.STORING)
     );
 
-    DRIVER.b().onTrue(
-      coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
-    ).onFalse(
-      coordSub.setStateCommand(AbsoluteStates.STORING)
-    );
+    // DRIVER.b().onTrue(
+    //   coordSub.setStateCommand(AbsoluteStates.SHOOTER_OVERRIDE)
+    // ).onFalse(
+    //   coordSub.setStateCommand(AbsoluteStates.STORING)
+    // );
 
 
     //look for .until() for having shooter wait to feed till shooter is at wanted Veloc and angle

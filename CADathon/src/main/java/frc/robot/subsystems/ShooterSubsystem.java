@@ -44,7 +44,8 @@ public class ShooterSubsystem extends SubsystemBase {
     ZEROING,
     STORING,
     IDLING,
-    AIMING
+    AIMING,
+    OVERRIDE_VOLTAGE
   }
 
 
@@ -132,6 +133,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private boolean isZeroingDone = false;
   
   public boolean changeOnce = true;
+  double angleVoltageSetpoint = 0;
 
   public ShooterSubsystem() {
 
@@ -319,8 +321,8 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case SHOOTING:
-        motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
-        //motorWheelLeader.setControl(new VoltageOut(voltageSetpoint));
+        //motorWheelLeader.setControl(vRequest.withVelocity(velocitySetpoint).withFeedForward(vKFF));
+        motorWheelLeader.setControl(new VoltageOut(voltageSetpoint));
         break;
 
       case IDLING:
@@ -330,6 +332,22 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     switch (currentAngleState) {
+      case OVERRIDE_VOLTAGE:
+          if(motorAngle.getPosition().getValueAsDouble() < 27 && motorAngle.getPosition().getValueAsDouble() > 0.5) {
+            motorAngle.setControl(new VoltageOut(angleVoltageSetpoint));
+
+          }
+          else if((motorAngle.getPosition().getValueAsDouble() < .5 && angleVoltageSetpoint >= 0)) {
+            motorAngle.setControl(new VoltageOut(angleVoltageSetpoint));
+          }
+          else if((motorAngle.getPosition().getValueAsDouble() > 27 && angleVoltageSetpoint <= 0)) {
+            motorAngle.setControl(new VoltageOut(angleVoltageSetpoint));
+          }
+          else {
+            angleVoltageSetpoint = 0;
+            motorAngle.setControl(new VoltageOut(angleVoltageSetpoint));
+          }
+        break;
       case OVERRIDE:
         motorAngle.setControl(mmRequest.withPosition(angleSetpoint));
         break;
@@ -407,13 +425,19 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return if withing tolerance
    */
   private boolean rpmWithinTolerance(double tolerance) {
-    //return Math.abs(voltageSetpoint - motorWheelLeader.getMotorVoltage().getValueAsDouble()) < tolerance;
-    return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
+    return Math.abs(voltageSetpoint - motorWheelLeader.getMotorVoltage().getValueAsDouble()) < tolerance;
+    //return Math.abs(velocitySetpoint - motorWheelLeader.getVelocity().getValueAsDouble()) < tolerance;
   }
 
   /* --------------- Setters --------------- */
   public void setVelocityOverrideSetpoint(double setpoint) {
     velocityOverrideSetpoint = setpoint;
+  }
+  public void setAngleVoltageOverride(double voltage) {
+      angleVoltageSetpoint = voltage;
+  }
+  public void setVoltageSetpoint(double voltage) {
+    voltageSetpoint = voltage;
   }
   public void setVelocitySetpoint(double setpoint) {
     velocitySetpoint = setpoint;
@@ -425,7 +449,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void setWantedState(AngleState angleState, ShooterState shooterState) {
     onlyOnChange = true;
-    currentAngleState = angleState;
+    if(currentAngleState != AngleState.ZEROING) {
+      currentAngleState = angleState;
+    }
     currentShooterState = shooterState;
   }
 
@@ -547,7 +573,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public boolean shooterReady () {
-    if(wheelsSpunUp && angleAtSetpoint()) { // comment for tuning
+    if(wheelsSpunUp) { // comment for tuning
       return true;
     }
     return false;

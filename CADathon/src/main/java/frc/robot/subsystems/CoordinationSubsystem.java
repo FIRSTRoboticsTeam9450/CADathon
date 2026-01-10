@@ -92,7 +92,7 @@ public class CoordinationSubsystem extends SubsystemBase{
         switch (currentState) {
             case PREPARING_FOR_SHOT_OVERRIDE:
                 shooterState = ShooterState.OVERRIDE;
-                shooterAngleState = AngleState.OVERRIDE;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
 
                 transferState = transferStates.PREPARING_FOR_SHOT;
                 if (intakeRaise) {
@@ -105,7 +105,7 @@ public class CoordinationSubsystem extends SubsystemBase{
             
             case SHOOTER_OVERRIDE:
                 shooterState = ShooterState.OVERRIDE;
-                shooterAngleState = AngleState.OVERRIDE;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
 
                 transferState = transferStates.FEEDING;
                 if (intakeRaise) {
@@ -125,7 +125,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 }
                 intaking = intakeStates.NOT_RUNNING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
                 break;
             
             case INTAKING_SPEECH:
@@ -134,7 +134,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
                 break;
             
             case INTAKING_STORY:
@@ -142,7 +142,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.STORY_BOARDS_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.IDLING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
                 break;
             
             case PREPARING_FOR_SHOT:
@@ -158,7 +158,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                     intaking = intakeStates.NOT_RUNNING;
                 }
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
                 break;
 
             case SHOOTING_SPEECH:
@@ -166,7 +166,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                 intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 intaking = intakeStates.INTAKING;
                 shooterState = ShooterState.SHOOTING;
-                shooterAngleState = AngleState.AIMING; // Used to be aiming
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE; // Used to be aiming
                 break;
 
             case SHOOT_STORY:
@@ -189,7 +189,7 @@ public class CoordinationSubsystem extends SubsystemBase{
                     intakeState = intakePos.SPEECH_BUBBLES_INTAKE;
                 }
                 intaking = intakeStates.OUTTAKING;
-                shooterAngleState = AngleState.AIMING;
+                shooterAngleState = AngleState.OVERRIDE_VOLTAGE;
                 break;
             
             default:
@@ -222,8 +222,8 @@ public class CoordinationSubsystem extends SubsystemBase{
 
     public Command leftTriggerCommand(CommandSwerveDrivetrain drivetrain, CommandXboxController DRIVER, BezierCurve driveBezier, double maxSpeed) {
         return Commands.either(
-            setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT)
-                .andThen(new RotationAlign(drivetrain, DRIVER, driveBezier, maxSpeed)), 
+            setStateCommand(AbsoluteStates.PREPARING_FOR_SHOT),
+                // .andThen(new RotationAlign(drivetrain, DRIVER, driveBezier, maxSpeed)), 
             setStateCommand(AbsoluteStates.INTAKING_SPEECH),
             () -> triggerModeIsShooting);
     }
